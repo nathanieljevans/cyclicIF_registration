@@ -23,7 +23,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     # read in meta data 
-    #meta = pd.read_csv(args.input[0] + '/core_meta.csv')
     parsed_names = pd.DataFrame([utils.parse_core_name(x) for x in os.listdir(args.input[0]) if x[-4:]=='.tif'])
 
     # select DAPI round 0 info 
