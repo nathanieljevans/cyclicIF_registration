@@ -1,8 +1,5 @@
 # Cyclic Immunofluorescence Registration Pipeline
 
-
-
-
 --- 
 
 ## Pipeline 
@@ -42,12 +39,18 @@ output
        
 ```
 
-> batch_log_file.log:                         log file for the sbatch command 
-> core_meta.csv:                              meta data for core, includes shape statistics for the dapi segmentations 
-> registration_eval.csv:                      registration eval metrics
-> registered_core=1_round=R1_color=c1.tif     registered image: round, color channel
-> unregistered_core=1_round=R1_color=c1.tif   unregistered image: round, color channel (**note:** R0, c1 is the DAPI fixed channel that all others are registered too. 
-> registration_results.csv                    aggregated results from all experiments/cores. 
+> batch_log_file.log:                         log file for the sbatch command   
+
+> core_meta.csv:                              meta data for core, includes shape statistics for the dapi segmentations   
+
+> registration_eval.csv:                      registration eval metrics  
+
+> registered_core=1_round=R1_color=c1.tif     registered image: round, color channel  
+
+> unregistered_core=1_round=R1_color=c1.tif   unregistered image: round, color channel (**note:** R0, c1 is the DAPI fixed channel that all others are registered too.   
+
+> registration_results.csv                    aggregated results from all experiments/cores.   
+
 
 ## Results 
 
