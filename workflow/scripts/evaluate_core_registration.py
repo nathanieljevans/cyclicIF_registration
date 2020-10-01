@@ -38,7 +38,7 @@ if __name__ == '__main__':
     
     _res = []
     for i,row in parsed_names[lambda x: x.color_channel=='c1'].iterrows(): 
-        print('generating registration success metrics:', row['round'], end='\r')
+        print('generating registration success metrics:', row['round'])
         moving = sitk.ReadImage(args.input[0] + '/' + row.path)
         
         _res.append(evaluate.eval_registration(fixed, moving, row.path, plot=False))
@@ -47,4 +47,4 @@ if __name__ == '__main__':
     res = res.merge(parsed_names, left_on='name',right_on='path', how='left')
     res.to_csv(args.input[0] + '/registration_eval.csv')
         
-        
+    print('eval complete.')

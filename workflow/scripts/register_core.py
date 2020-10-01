@@ -38,7 +38,7 @@ if __name__ == '__main__':
     parsed_names = parsed_names[lambda x: x.status == 'unregistered']
     
     for i,row in parsed_names[lambda x: x.color_channel=='c1'].iterrows(): 
-        print('generating registration transformation:', row['round'], end='\r')
+        print('generating registration transformation:', row['round'])
         moving = sitk.ReadImage(args.input[0] + '/' + row.path)
         Tx = register.get_registration_transform(fixed, moving, verbose=False)
         

@@ -9,15 +9,14 @@ echo 'segmenting and matching cores...'
 time {
 python segment_and_match_cores.py --input $data_dir --output $out_dir --slide $slide_name --scene $scene
 }
-echo 'complete.'
+echo 'core segmentation and matching is complete.'
 
 scene_dir=$out_dir/$slide_name/$scene
 for core_dir in $scene_dir/*
 do
-    time {
-    echo "registering $core_dir dir..."
-    python register_core.py --input $core_dir
-    python evaluate_core_registration.py --input $core_dir
-    }
+    echo $core_dir
+    sbatch process_core_sbatch.sh $core_dir
 done
+
+echo 'sbatch core assignment complete. After the jobs have completed, run `aggregate_results.py`' 
 
