@@ -1,7 +1,6 @@
 # Cyclic Immunofluorescence Registration Pipeline
 
-
-
+If using within OHSU or the Mills Lab, see the [wiki](https://github.com/nathanieljevans/cyclicIF_registration/wiki/Mills-Lab-Example) for more specific instructions. 
 
 --- 
 
@@ -21,9 +20,8 @@ To run this pipeline in parrallel, use:
  
 Once all images have been registered, the metadata and results can be aggregated by running: 
 
-```$ python aggregate_resulys.py --dir /home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output```
+```$ python aggregate_results.py --dir /home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output```
  
-
 For specific pipeline steps, see `tutorial.ipynb` 
 
 ## Output Structure
@@ -51,12 +49,18 @@ output
        
 ```
 
-> batch_log_file.log:                         log file for the sbatch command 
-> core_meta.csv:                              meta data for core, includes shape statistics for the dapi segmentations 
-> registration_eval.csv:                      registration eval metrics
-> registered_core=1_round=R1_color=c1.tif     registered image: round, color channel
-> unregistered_core=1_round=R1_color=c1.tif   unregistered image: round, color channel (**note:** R0, c1 is the DAPI fixed channel that all others are registered too. 
-> registration_results.csv                    aggregated results from all experiments/cores. 
+> batch_log_file.log:                         log file for the sbatch command   
+
+> core_meta.csv:                              meta data for core, includes shape statistics for the dapi segmentations   
+
+> registration_eval.csv:                      registration eval metrics  
+
+> registered_core=1_round=R1_color=c1.tif     registered image: round, color channel  
+
+> unregistered_core=1_round=R1_color=c1.tif   unregistered image: round, color channel (**note:** R0, c1 is the DAPI fixed channel that all others are registered too.   
+
+> registration_results.csv                    aggregated results from all experiments/cores.   
+
 
 ## Results 
 
