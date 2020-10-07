@@ -10,13 +10,15 @@ use `environment.yml` to set up conda environment.
 
 ## Pipeline 
 
+Currently, the data directories are hard coded into the `.sh` files. Future work will add command line functionality to define those. To edit this, open the `.sh` file and modify the variables at the top of the script to define `input`, `output`, `slide`, `scene`.
+
 To run the registration pipeline for a single experiment: 
 
-```$ ./run_registration.sh --input /path/to/images/directory --output /path/to/output/directory --slide S1 --scene Scene-1```
+```$ ./run_registration.sh```
 
 To run this pipeline in parrallel, use: 
 
-```$ ./run_registration_batch.sh --input /path/to/images/directory --output /path/to/output/directory --slide S1 --scene Scene-1```
+```$ ./run_registration_batch.sh```
  
 Once all images have been registered, the metadata and results can be aggregated by running: 
 
