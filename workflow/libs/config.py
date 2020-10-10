@@ -20,17 +20,22 @@ downsample_proportion = 10
 # NOTE: this may need to be adjusted for different core sizes or types 
 # default ~ 2000
 min_obj_size = int( 5e4 / downsample_proportion )
+
+# threshold value used to select core regions (after a gaussian blur) 
+# default ~ 0.75
 core_seg_quantile = 0.75
 
-# padding for selecting a core
-# default ~ 25
-padding = 25
+# padding used when selecting a core, eg selects core bounding box + 2*padding
+# default ~ 10
+padding = 10
 
 # segmentation params 
-gaussian_blur_variance = 1e-2
+# default ~ 3.5e-3
+gaussian_blur_variance = 3.5e-3
 
 # core matching clustering method
 # options: 'k-means-constrained', 'dbscan' 
+# note: k-means-constrained has issues if later rounds have more identified cores 
 # default ~ dbscan
 clustering_method = 'dbscan'
 
@@ -52,10 +57,11 @@ pixel_height = 0.65 # microns
 ############################## REGISTRATION ########################################
 ####################################################################################
 
-num_hist_bins = 100
+num_hist_bins = 50
 learning_rate = 1e-3
 min_step = 1e-9
 iterations = 100
+sampling_percentage = 1.0
 
 ####################################################################################
 ############################## QUALITY CONTROL #####################################

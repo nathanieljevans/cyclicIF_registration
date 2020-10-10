@@ -4,6 +4,8 @@ import config
 import pandas as pd
 import numpy as np
 
+import utils
+
 def segment_dapi_round(img, plot=False): 
     '''
     This includes gaussian blur 
@@ -37,13 +39,13 @@ def segment_dapi_round(img, plot=False):
 
     if plot:
         plt.figure()
+        plt.title('pixel intensity histogram')
         plt.hist(sitk.GetArrayViewFromImage(img_blur).ravel(), bins=100)
-        plt.axvline(seg_thresh, c='r')
+        plt.axvline(seg_thresh, c='r', label='threshold')
+        plt.legend()
         plt.show()
         
-        plt.figure(figsize=(7,7))
-        plt.imshow(sitk.GetArrayViewFromImage(seg))
-        plt.show()
+        utils.myshow(seg)
 
     #if plot: print('watershed threshold...')
     #stats = sitk.LabelShapeStatisticsImageFilter()
@@ -55,15 +57,18 @@ def segment_dapi_round(img, plot=False):
     # remove small components 
     cc = sitk.RelabelComponent(cc, minimumObjectSize = config.min_obj_size)
     
+    # THIS DOESN'T WORK HERE - need to apply the mask on the original image in select_core() - but can't use a downsampled mask ... 
+    # set non-segmented regions to zero in order to avoid artifacts included in padding
+    #mask = cc > 0 
+    #if plot: utils.myshow(mask)
+    #maskFilter = sitk.MaskImageFilter()
+    #cc = maskFilter.Execute(cc, mask) 
+    
+    if plot: utils.myshow(cc, title='filtered connected components') 
+    
     stats = sitk.LabelShapeStatisticsImageFilter()
     stats.Execute(cc)
     
-    if plot: 
-        plt.figure(figsize=(7,7))
-        plt.title('otsu connected components')
-        plt.imshow(sitk.GetArrayViewFromImage(cc))
-        plt.show()
-        
     if plot: 'calculating stats...'
     shape_stats = sitk.LabelShapeStatisticsImageFilter()
     shape_stats.ComputeOrientedBoundingBoxOn()

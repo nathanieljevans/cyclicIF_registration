@@ -19,7 +19,11 @@ def get_registration_transform(fixed, moving, verbose=True):
     #R.SetMetricAsMeanSquares()
     R.SetMetricAsMattesMutualInformation(numberOfHistogramBins=config.num_hist_bins)
     
-    R.SetOptimizerAsRegularStepGradientDescent(learningRate=config.learning_rate, minStep=config.min_step, numberOfIterations=config.iterations)
+    #R.SetOptimizerAsConjugateGradientLineSearch(learningRate=config.learning_rate, numberOfIterations=config.iterations)
+    R.SetOptimizerAsRegularStepGradientDescent(learningRate=config.learning_rate, 
+                                               minStep=config.min_step, 
+                                               numberOfIterations=config.iterations)
+    
     R.SetInitialTransform(sitk.TranslationTransform(fixed.GetDimension()))
     R.SetInterpolator(sitk.sitkLinear)
     
