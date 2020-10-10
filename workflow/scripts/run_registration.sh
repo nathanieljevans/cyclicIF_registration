@@ -19,5 +19,6 @@ do
     python register_core.py --input $core_dir
     python evaluate_core_registration.py --input $core_dir
     }
+    ls $core_dir | grep -P "unregistered_.*_round=R[1-9].*" | xargs -d"\n" rm
 done
 

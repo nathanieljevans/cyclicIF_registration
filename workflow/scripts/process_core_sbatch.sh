@@ -17,3 +17,6 @@ echo "registering $core_dir dir..." >> $log
 python register_core.py --input $core_dir >> $log
 echo "evaluating registration success in $core_dir..." >> $log
 python evaluate_core_registration.py --input $core_dir >> $log
+
+## remove the unregistered cores 
+ls $core_dir | grep -P "unregistered_.*_round=R[1-9].*" | xargs -d"\n" rm
