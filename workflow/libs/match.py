@@ -4,6 +4,7 @@ import config
 import segment
 from k_means_constrained import KMeansConstrained # need to cite - https://github.com/joshlk/k-means-constrained
 import numpy as np
+from sklearn.cluster import DBSCAN
 
 def get_all_rounds_core_statistics(info, imgs, verbose=True):
     '''
@@ -31,7 +32,7 @@ def get_all_rounds_core_statistics(info, imgs, verbose=True):
     
     return res 
 
-def match_cores_across_rounds(info): 
+def match_cores_across_rounds(info, verbose=True, method=config.clustering_method): 
     '''
     info    dataframe 
     
@@ -45,7 +46,7 @@ def match_cores_across_rounds(info):
     num_of_rounds = info['round'].unique().shape[0]
     
     # features to use for clustering 
-    feats = ['center_x', 'center_y']#,'Intensity Mean', 'Volume (nm^3)'] # 'width', 'height', 
+    feats = ['center_x', 'center_y'] #,'Intensity Mean', 'Volume (nm^3)'] # 'width', 'height', 
     
     # data to fit 
     X = info[feats].values
@@ -60,10 +61,22 @@ def match_cores_across_rounds(info):
 
     # initial cluster seeds will be R0 centers 
     seeds = info[info['round'] == 'R0'][feats].values
-
-    # https://github.com/joshlk/k-means-constrained
-    clus = KMeansConstrained(n_clusters=num_R0_components, init=seeds, size_max=num_of_rounds, n_init=1, tol=1e-8, max_iter=1000)
-    _ = clus.fit( X )
+    
+    if verbose: print('using clustering method:', method)
+        
+    if method == 'k-means-constrained': 
+        # https://github.com/joshlk/k-means-constrained
+        clus = KMeansConstrained(n_clusters=num_R0_components, init=seeds, size_max=num_of_rounds, n_init=1, tol=1e-8, max_iter=1000)
+        _ = clus.fit(X)
+    
+    elif method == 'dbscan':
+        clus = DBSCAN(eps=config.eps, min_samples=config.min_samples).fit(X)
+        
+    else: 
+        raise ValueError('choose an appropriate clustering method from: "dbscan", "k-means-constrained"')
+        
+    # TODO: check that every cluster has a R0 [and not doubles from any round]
+    
 
     return clus.labels_ + 1
 

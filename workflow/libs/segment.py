@@ -2,10 +2,13 @@ import SimpleITK as sitk
 from matplotlib import pyplot as plt 
 import config
 import pandas as pd
+import numpy as np
 
 def segment_dapi_round(img, plot=False): 
     '''
     This includes gaussian blur 
+    
+    plot = verbose and plotting
     '''
     if plot: print('rescaling img..')
     img = sitk.RescaleIntensity(img)
@@ -18,46 +21,56 @@ def segment_dapi_round(img, plot=False):
     
     if plot: print('applying gaussing blur...')
     gaussian = sitk.DiscreteGaussianImageFilter()
-    gaussian.SetVariance( 1e-2)
+    gaussian.SetVariance( config.gaussian_blur_variance )
     img_blur = gaussian.Execute ( img )
 
-    if plot: print('otsu thresholding...')
-    otsu_filter = sitk.OtsuThresholdImageFilter()
-    otsu_filter.SetInsideValue(0)
-    otsu_filter.SetOutsideValue(1)
-    seg = otsu_filter.Execute(img_blur)
+    #if plot: print('otsu thresholding...')
+    #otsu_filter = sitk.OtsuThresholdImageFilter()
+    #otsu_filter.SetInsideValue(0)
+    #otsu_filter.SetOutsideValue(1)
+    #seg = otsu_filter.Execute(img_blur)
+    
+    seg_thresh = np.quantile(sitk.GetArrayViewFromImage(img_blur).ravel(), config.core_seg_quantile)
+    seg = img_blur > seg_thresh
+    
+    plt.figure()
 
     if plot:
+        plt.figure()
+        plt.hist(sitk.GetArrayViewFromImage(img_blur).ravel(), bins=100)
+        plt.axvline(seg_thresh, c='r')
+        plt.show()
+        
         plt.figure(figsize=(7,7))
         plt.imshow(sitk.GetArrayViewFromImage(seg))
         plt.show()
 
-    if plot: print('watershed threshold...')
-    stats = sitk.LabelShapeStatisticsImageFilter()
-    stats.Execute(sitk.ConnectedComponent(seg))
+    #if plot: print('watershed threshold...')
+    #stats = sitk.LabelShapeStatisticsImageFilter()
+    #stats.Execute(sitk.ConnectedComponent(seg))
     
-    dist_img = sitk.SignedMaurerDistanceMap(seg != 0, insideIsPositive=False, squaredDistance=False, useImageSpacing=False)
-
-    seeds = sitk.ConnectedComponent(dist_img < -config.radius)
-    # Relabel the seed objects using consecutive object labels while removing all objects with less than 15 pixels.
-    seeds = sitk.RelabelComponent(seeds, minimumObjectSize= config.min_obj_size)
-
-    # Run the watershed segmentation using the distance map and seeds.
-    ws = sitk.MorphologicalWatershedFromMarkers(dist_img, seeds, markWatershedLine=True)
-    ws = sitk.Mask(ws, sitk.Cast(seg, ws.GetPixelID()))
+    # get connected components
+    cc = sitk.ConnectedComponent(seg)
+    
+    # remove small components 
+    cc = sitk.RelabelComponent(cc, minimumObjectSize = config.min_obj_size)
+    
+    stats = sitk.LabelShapeStatisticsImageFilter()
+    stats.Execute(cc)
     
     if plot: 
         plt.figure(figsize=(7,7))
-        plt.imshow(sitk.GetArrayViewFromImage(ws))
+        plt.title('otsu connected components')
+        plt.imshow(sitk.GetArrayViewFromImage(cc))
         plt.show()
         
     if plot: 'calculating stats...'
     shape_stats = sitk.LabelShapeStatisticsImageFilter()
     shape_stats.ComputeOrientedBoundingBoxOn()
-    shape_stats.Execute(ws)
+    shape_stats.Execute(cc)
 
     intensity_stats = sitk.LabelIntensityStatisticsImageFilter()
-    intensity_stats.Execute(ws, img)
+    intensity_stats.Execute(cc, img)
 
     stats_list = [ (shape_stats.GetBoundingBox(i)[0],
                     shape_stats.GetBoundingBox(i)[1],

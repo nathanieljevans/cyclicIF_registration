@@ -1,4 +1,5 @@
 import SimpleITK as sitk
+import config
 
 def get_registration_transform(fixed, moving, verbose=True): 
     '''
@@ -8,10 +9,6 @@ def get_registration_transform(fixed, moving, verbose=True):
     fixed =  sitk.Cast(fixed, sitk.sitkFloat32)
     moving = sitk.Cast(moving, sitk.sitkFloat32)
     
-    # reset index - may not be necessary? 
-    #fixed.SetOrigin((0,0))
-    #moving.SetOrigin((0,0))
-    
     # normalize values?
     fixed = sitk.Normalize(fixed)
     moving = sitk.Normalize(moving)
@@ -20,9 +17,9 @@ def get_registration_transform(fixed, moving, verbose=True):
     R = sitk.ImageRegistrationMethod()
     
     #R.SetMetricAsMeanSquares()
-    R.SetMetricAsMattesMutualInformation(numberOfHistogramBins=50)
+    R.SetMetricAsMattesMutualInformation(numberOfHistogramBins=config.num_hist_bins)
     
-    R.SetOptimizerAsRegularStepGradientDescent(learningRate=1e-2, minStep=1e-9, numberOfIterations=50)
+    R.SetOptimizerAsRegularStepGradientDescent(learningRate=config.learning_rate, minStep=config.min_step, numberOfIterations=config.iterations)
     R.SetInitialTransform(sitk.TranslationTransform(fixed.GetDimension()))
     R.SetInterpolator(sitk.sitkLinear)
     
