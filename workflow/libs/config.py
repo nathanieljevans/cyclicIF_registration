@@ -6,7 +6,6 @@ This script holds general meta data & configuration paths required for pipeline 
 
 image_dir_path = '/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/data/' 
 
-
 ####################################################################################
 ############################## core segmentation ###################################
 ####################################################################################
@@ -49,6 +48,7 @@ min_samples = 2
 ####################################################################################
 ################################### GENERAL ########################################
 ####################################################################################
+# this isn't used anywhere - YET - SimpleITK does use spacing, but I haven't changed it yet - worried how it might change results
 
 pixel_width = 0.65 # microns
 pixel_height = 0.65 # microns 
