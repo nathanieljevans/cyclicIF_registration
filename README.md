@@ -2,6 +2,8 @@
 
 If using within OHSU or the Mills Lab, see the [wiki](https://github.com/nathanieljevans/cyclicIF_registration/wiki/Mills-Lab-Example) for more specific instructions. 
 
+To set up a remote jupyter notebook kernel on exahead, follow [these](https://github.com/nathanieljevans/cyclicIF_registration/wiki/Exahead-Jupyter-Kernel-Instructions) instructions. 
+
 --- 
 
 ## Environment 
