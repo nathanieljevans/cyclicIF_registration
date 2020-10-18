@@ -44,6 +44,6 @@ if __name__ == '__main__':
         
     res = pd.DataFrame(_res)
     res = res.merge(parsed_names, left_on='name',right_on='path', how='left')
-    res.to_csv(args.input[0] + '/registration_eval.csv')
+    res.to_csv(args.input[0] + '/registration_eval.csv', index=False)
         
     print('eval complete.')

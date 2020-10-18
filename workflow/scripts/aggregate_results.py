@@ -62,7 +62,7 @@ if __name__ == '__main__':
             print()
             
     _all = pd.concat(_all, axis=0, ignore_index=True) 
-    _all.to_csv(args.dir[0] + '/aggregated_results.csv')
+    _all.to_csv(args.dir[0] + '/aggregated_results.csv', index=False)
     print('completed results aggregation.')
             
             
