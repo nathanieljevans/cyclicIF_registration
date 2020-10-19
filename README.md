@@ -72,7 +72,7 @@ To interact with the results (especially if you're working on a remote file syst
 
 To re-stitch the cores back into a single `round-core` image, this can be done in the results notebook. For time complexity, it is recommended to use the multithreaded option, which will visualize progress as: 
 
-![](./docs/img_stitching_prog2.gif)
+![](img_stitching_prog2.gif)
 
 ## Quality Control 
 
