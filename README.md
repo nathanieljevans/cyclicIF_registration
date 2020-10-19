@@ -70,6 +70,10 @@ output
 
 To interact with the results (especially if you're working on a remote file system), it's easiest to use the `results.ipynb` notebook. This allows the user to visualize experiment segmentations and registered images. Additionally, registration metrics can be evaluated to identify outliers. 
 
+To re-stitch the cores back into a single `round-core` image, this can be done in the results notebook. For time complexity, it is recommended to use the multithreaded option, which will visualize progress as: 
+
+![](./docs/img_stitching_prog2.gif)
+
 ## Quality Control 
 
 ...
