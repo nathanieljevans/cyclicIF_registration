@@ -68,8 +68,9 @@ output
 
 ## Results 
 
-To interact with the results (especially if you're working on a remote file system), it's easiest to use the `results.ipynb` notebook. This allows the user to visualize experiment segmentations and registered images. Additionally, registration metrics can be evaluated to identify outliers. 
+Registration results are stored in `aggregated_results.csv`, for which the data dictionary can be found [here](https://github.com/nathanieljevans/cyclicIF_registration/blob/master/workflow/libs/data_dict.csv). 
 
+To interact with the results (especially if you're working on a remote file system), it's easiest to use the `results.ipynb` notebook. This allows the user to visualize segmentations and registered images. Additionally, registration metrics can be used to flag poor registrations for QC or follow-up. 
 
 ## Re-stitching Cores
 
