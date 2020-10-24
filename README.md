@@ -70,11 +70,44 @@ output
 
 To interact with the results (especially if you're working on a remote file system), it's easiest to use the `results.ipynb` notebook. This allows the user to visualize experiment segmentations and registered images. Additionally, registration metrics can be evaluated to identify outliers. 
 
-To re-stitch the cores back into a single `round-core` image, this can be done in the results notebook. For time complexity, it is recommended to use the multithreaded option, which will visualize progress as: 
+
+## Re-stitching Cores
+
+To re-stitch the cores back into a single `round-color` image, this can be done in the results notebook or command line interface. For time complexity, it is recommended to use the multithreaded option, which will visualize progress as (Note-progress bar is currently not working. environment issues): 
 
 <img src="img_stitching_prog2.gif" width="200">
 
+To re-stitch images in command line, use: 
+
+```bash 
+$ python restitch_cores.py --results_path /home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/aggregated_results.csv --output /home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/S3/Scene-1/ --slide S3 --scene Scene-1 --qc None
+```
+
+For command line options, see: 
+```bash
+$ python restitch_cores.py --help
+
+usage: restitch_cores.py [-h] [--results_path RESULTS] [--output OUTPUT] [--slide SLIDE] [--scene SCENE]
+                         [--qc QC_METHOD]
+
+Restitching a set of registered cores given Round,Scene,Core IDs.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --results_path RESULTS
+                        registration results csv path
+  --output OUTPUT       output directory where the restitched images will be written to disk.
+  --slide SLIDE         slide name (identifier)
+  --scene SCENE         scene name (identifier)
+  --qc QC_METHOD        qc method: Can be ["None", "Auto", "/path/to/file/with/line/sep/core/ids/to/filter"]
+```
+
 ## Quality Control 
 
-...
+Quality control is best implemented at the `re-stitching` step. There are three options, No QC, auto QC or manual QC. 
+
+`auto` QC will filter any round-core registrations that do not pass the thresholds specified in `config.py`. 
+`manual` QC can be performed by passing either a list (in `results.ipynb`) or a text file path (in `restitch_cores.py`) of cores that should not be restiched. 
+`None` will perform no QC and all cores/rounds will be re-stitched. 
+
  
