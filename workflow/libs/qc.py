@@ -7,7 +7,9 @@ import utils
 import numpy as np
 import os
 
+from ipywidgets import interact, interactive, fixed, interact_manual
 import ipywidgets as widgets
+from IPython.display import display, clear_output
 
 def plot_core_reg(core, output_dir='/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output', slide='S3', scene='Scene-1', _round=['R0','R1','R2'], channel=['c1']*3):
     
@@ -59,7 +61,7 @@ def restitch_image(dat, _round, _channel, qc=None, output_dir='../output/S3/Scen
     output 
         joined_image   <sitk Image>  Restitched image with all cores, excluding qc 
     '''
-    assert (qc in [None, 'auto']) | (type(qc) == type([])), f'Invalid value: qc can be None, "auto" or a List object, got: {qc}'
+    assert (qc in [None, 'auto']) | (type(qc) == type([])), f'Invalid value: qc can be None, "auto" or a List object, got: {qc} [{type(qc)}]'
     
     # we'll use the R0 dapi core positions as the core mapping 
     c1R0_res = dat[lambda x: (x['round'] == 'R0') & (x['color_channel'] == 'c1')][['core','center_x','center_y','width', 'height']].drop_duplicates().set_index('core')
@@ -70,11 +72,10 @@ def restitch_image(dat, _round, _channel, qc=None, output_dir='../output/S3/Scen
 
     # filter to round and core; this is what we can use for hard path ref
     imDat = dat[lambda x: (x['round'] == _round) & (x['color_channel'] == _channel)]
-    print('shape after round/channel filter:', imDat.shape)
     
     # the dataframe has missingness: rows where the color_channel=/=c1 don't have an 'original' image path name
     # so we'll need to grab to RX-c1 path name and then change the cX as appropriate 
-    Rxc1_name =  dat[lambda x: (x['round'] == _round) & (x['color_channel'] == 'c1')].original.unique() 
+    Rxc1_name =  dat[lambda x: (x['round'] == _round) & (x['color_channel'] == 'c1')].img_name.unique() 
     assert Rxc1_name.shape[0] == 1, f'expected 1 original pathname, got {Rxc1_name.shape[0]}'
     Rxc1_name = Rxc1_name[0]
     
@@ -84,17 +85,10 @@ def restitch_image(dat, _round, _channel, qc=None, output_dir='../output/S3/Scen
     
     ## Quality Control --------------------------
     if qc == 'auto': 
-        print('auto QC is not currently implemented, no qc will be done') 
-    #    
-    ### TODO: need to use R0-c1 for filtering criteria since >c1 is NA
-    #    print(imDat.false_pos_err)
-    #    print(imDat.false_neg_err)
-    #    print(imDat.hausdorff_distance)
-    #    imDat = imDat[lambda x: \
-    #                  (x.false_pos_err < config.FPR_threshold) & \
-    #                  (x.false_neg_err < config.FNR_threshold) & \
-    #                  (x.hausdorff_dist < config.hausdorff_distance_threshold)]
-    #    print('shape after QC:', imDat.shape)
+        imDat = imDat[lambda x: \
+                      (x.false_pos_err < config.FPR_threshold) & \
+                      (x.false_neg_err < config.FNR_threshold) & \
+                      (x.hausdorff_dist < config.hausdorff_distance_threshold)]
     if (type(qc) == type([])): 
         imDat = imDat[lambda x: x.core.isin(qc)]
     else: 
