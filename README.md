@@ -104,10 +104,10 @@ optional arguments:
 
 ## Quality Control 
 
-Quality control is best implemented at the `re-stitching` step. There are three options, No QC, auto QC or manual QC. 
+Quality control is best implemented at the `re-stitching` step. There are three options, No QC, auto QC or manual QC.   
 
-`auto` QC will filter any round-core registrations that do not pass the thresholds specified in `config.py`. 
-`manual` QC can be performed by passing either a list (in `results.ipynb`) or a text file path (in `restitch_cores.py`) of cores that should not be restiched. 
-`None` will perform no QC and all cores/rounds will be re-stitched. 
+`auto` QC will filter any round-core registrations that do not pass the thresholds specified in `config.py`.   
+`manual` QC can be performed by passing either a list (in `results.ipynb`) or a text file path (in `restitch_cores.py`) of cores that should not be restiched.   
+`None` will perform no QC and all cores/rounds will be re-stitched.   
 
  
