@@ -39,7 +39,11 @@ output
 │   │
 │   │       
 │   └───<scene_name_01>
-│   │     │
+|   |     └ core_id_mapping.png
+|   |     └ R0_AF488.AF555.AF647.AF750_S3_2020_01_21__13471-Scene-1_c1_ORG_registered.tif
+|   |     └ ... 
+|   |     └ R2_PCNA.AR.ER.GATA3_S3_2020_01_23__13492-Scene-1_c5_ORG_registered.tif
+│   │     │   
 │   │     │
 │   │     └──<core_label_01>
 │   │     │      └ batch_log_file.log
@@ -52,6 +56,10 @@ output
 │   │     │
        
 ```
+
+> core_id_mapping.png                         R0-c1 (dapi) image annotated with core labels   
+
+> R0_...registered.tif                       final registered image - same naming convention as input data + `_registered.tif`  
 
 > batch_log_file.log:                         log file for the sbatch command   
 
@@ -71,6 +79,8 @@ output
 Registration results are stored in `aggregated_results.csv`, for which the data dictionary can be found [here](https://github.com/nathanieljevans/cyclicIF_registration/blob/master/workflow/libs/data_dict.csv). 
 
 To interact with the results (especially if you're working on a remote file system), it's easiest to use the `results.ipynb` notebook. This allows the user to visualize segmentations and registered images. Additionally, registration metrics can be used to flag poor registrations for QC or follow-up. 
+
+To see the core ID mapping, see `tutorial.ipynb` or `core_id_mapping.png` in the `scene` directory. 
 
 ## Re-stitching Cores
 
