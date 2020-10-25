@@ -8,7 +8,7 @@ example
 $ python restitch_cores.py --results_path /home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/aggregated_results.csv --output /home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/S3/Scene-1/ --slide S3 --scene Scene-1 --qc None
 
 
-
+If using an
 '''
 
 import sys, os
@@ -27,6 +27,7 @@ import qc
 import threading
 import pandas as pd
 import numpy as np
+import json
 
 
 if __name__ == '__main__': 
@@ -67,7 +68,7 @@ if __name__ == '__main__':
                         type=str, 
                         nargs=1,
                         default='None',
-                        help='qc method: Can be ["None", "Auto", "/path/to/file/with/line/sep/core/ids/to/filter"]')
+                        help='qc method: Can be ["None", "Auto", "/path/to/json/file/with/core/ids/to/filter"]')
                         
     args = parser.parse_args()
     
@@ -77,9 +78,12 @@ if __name__ == '__main__':
     elif args.qc_method[0] in ['AUTO', 'Auto', 'auto']: 
         qc_method = 'auto'
         
-    elif args.qc_method[0][-4:] == '.txt': 
-        print('manual QC is not currently implemented- No QC will be done') 
-        qc_method = None 
+    elif args.qc_method[0][-4:] == '.json': 
+        
+        # TODO: NEEDS TO BE TESTED 
+        with open(args.qc_method[0]) as data_file:    
+            qc_method = json.load()
+            
         
     else: 
         print(f'unreconized qc method: {args.qc_method[0]}') 
@@ -109,7 +113,17 @@ if __name__ == '__main__':
         _temp = res[lambda x: (x['round'] == _round)]
         for _channel in np.sort(_temp['color_channel'].unique()): 
             print(f'\t\t\t\t {(_round, _channel)}')
-            t = threading.Thread(target=qc.restitch_image, args = (res, _round, _channel, qc_method, args.output[0], True, True))
+            
+            # parse the dictionary for manual qc. 
+            if type(qc_method) == type({}): 
+                if _round in qc_method.keys(): 
+                    _qc_method = qc_method[_round]
+                else: 
+                    _qc_method=None
+            else: 
+                _qc_method = qc_method
+            
+            t = threading.Thread(target=qc.restitch_image, args = (res, _round, _channel, _qc_method, args.output[0], True, True))
             t.daemon = True
             t.start()
             threads.append(t)

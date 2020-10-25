@@ -6,15 +6,19 @@ from k_means_constrained import KMeansConstrained # need to cite - https://githu
 import numpy as np
 from sklearn.cluster import DBSCAN
 
-def get_all_rounds_core_statistics(info, imgs, verbose=True):
+def get_all_rounds_core_statistics(info, imgs, verbose=True, return_R0_dapi=False):
     '''
-    info    dataframe   general full round image information, `parsed_names3` in tutorial
-    imgs    dict        dict matching round image file name to image, `imgs` in tutorial 
+    info             dataframe          general full round image information, `parsed_names3` in tutorial
+    imgs             dict               dict matching round image file name to image, `imgs` in tutorial 
+    verbose          boolean            print msgs 
+    return_R0_dapi   boolean            whether to return the downsampled R0-c1 (dapi) image 
     '''
     
+    # select dapi channel only
     dapi_names = info[(info.color_channel == 'c1')]
 
     res = []
+    R0_dapi = None 
     for name in dapi_names.original.values: 
 
         if verbose: print('processing: ', name)
@@ -24,13 +28,21 @@ def get_all_rounds_core_statistics(info, imgs, verbose=True):
 
         dapi_stats = dapi_stats.assign(img_name = name)
         res.append(dapi_stats)
+        
+        if 'R0_' in name:
+            assert R0_dapi is None, 'multiple assignments to R0_dapi when there should only be one - check image naming convention'
+            R0_dapi = dapi
 
     res = pd.concat(res, axis=0)
 
     res = res.merge(info, left_on='img_name', right_on='original', how='left')
     res.head()
     
-    return res 
+    if return_R0_dapi: 
+        assert R0_dapi is not None, 'could not identify R0 dapi in `match.get_all_rounds_core_statistics`' 
+        return res, R0_dapi
+    else: 
+        return res 
 
 def match_cores_across_rounds(info, verbose=True, method=config.clustering_method): 
     '''

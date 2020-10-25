@@ -1,5 +1,6 @@
 import SimpleITK as sitk
 from matplotlib import pyplot as plt 
+from matplotlib import patches as patches
 import config
 import pandas as pd
 import numpy as np
@@ -110,6 +111,15 @@ def segment_dapi_round(img, plot=False):
     
     return stats, shape_stats
 
+def generate_core_id_map(img, shape_stats): 
+    '''
+    Generate a downsampled image of R0-C1 (dapi) image where each core bounding box is labeled with it's corresponding identifier. 
+    '''
+    
+    pass
+
+
+
 def select_core(img, label, stats, scale=1): 
     '''
     takes full round image, and retrieves the label region of interest, as specified by shape stats. Optional scaling if using downsampled image for segmentation. 
@@ -166,5 +176,44 @@ def perform_otsu_threshold(img):
     otsu_filter.SetOutsideValue(1)
     seg = otsu_filter.Execute(img)
     return seg
+
+def generate_core_id_map(img, stats, plot=True, out='/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/S3/Scene-1'): 
+    '''
+    Generate a downsampled image of R0-C1 (dapi) image where each core bounding box is labeled with it's corresponding identifier. 
+    
+    inputs: 
+    img            <sitk.image>       should be the downsampled image of R0-C1 (dapi) from which shape statistics were calculated. 
+    stats          <pd.dataframe>     shape statistics calculated during image segmentation
+    out            <str>              output directory to save image to; if none, not saved 
+    
+    outputs: 
+    shape statistic results [, downsampled R0-c1 (dapi) image] 
+    '''
+    
+    img_arr = sitk.GetArrayViewFromImage(img)#.astype(np.uint8)
+        
+    # Create figure and axes
+    fig,ax = plt.subplots(1, figsize=(15,15))
+
+    # Display the image
+    ax.imshow(img_arr)
+    
+    for i, row in stats.iterrows(): 
+        
+        rect = patches.Rectangle((row.center_x, row.center_y), row.width, row.height, linewidth=2, edgecolor='r', facecolor='none')
+        ax.add_patch(rect)
+        plt.text(row.center_x, row.center_y - 10, f'core-{int(row.component)}', c='w')
+
+    plt.axis('off')
+    
+    if out is not None: 
+        print('saving to:', out)
+        fig.savefig(out + '/core_id_mapping.png')
+        
+    if plot: 
+        print('plotting')
+        plt.show()
+        
+    plt.close('all')
 
 

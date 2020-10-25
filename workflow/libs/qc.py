@@ -83,18 +83,24 @@ def restitch_image(dat, _round, _channel, qc=None, output_dir='../output/S3/Scen
     joined_image = sitk.Image(full_size_x, full_size_y, sitk.sitkFloat32)
     joined_image.SetSpacing((config.pixel_width, config.pixel_height))
     
-    ## Quality Control --------------------------
+    ###########################################################################
+    ############################# Quality Control #############################
+    ###########################################################################
     if qc == 'auto': 
+        # filter all cores with registration metrics that don't pass QC 
         imDat = imDat[lambda x: \
                       (x.false_pos_err < config.FPR_threshold) & \
                       (x.false_neg_err < config.FNR_threshold) & \
                       (x.hausdorff_dist < config.hausdorff_distance_threshold)]
-    if (type(qc) == type([])): 
-        imDat = imDat[lambda x: x.core.isin(qc)]
+        
+    elif (type(qc) == type([])): 
+        # filter all cores listed in qc 
+        imDat = imDat[lambda x: ~x.core.isin(qc)]
+        
     else: 
         pass
         #print('No QC performed')
-    ## -------------------------------------------
+    ###########################################################################
     
     # resample each core of size `joined_image` then combine by addition 
     for i, row in imDat.sort_values('core').iterrows(): 

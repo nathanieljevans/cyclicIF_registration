@@ -28,8 +28,6 @@ def mmkdir(path, remove=True):
     elif not os.path.exists(path): 
         os.mkdir(path) 
         
-
-
 if __name__ == '__main__': 
     print('starting `segment_and_match_cores.py`...') 
     
@@ -70,7 +68,11 @@ if __name__ == '__main__':
         imgs[path] = sitk.ReadImage(config.image_dir_path + path)
     
     # segment cores and get statistics 
-    res = match.get_all_rounds_core_statistics(parsed_names, imgs, verbose=True)
+    res, R0_dapi = match.get_all_rounds_core_statistics(parsed_names, imgs, verbose=True, return_R0_dapi=True)
+    
+    # create core id mapping 
+    R0_dapi_stats = res[lambda x: x['round'] == 'R0']
+    segment.generate_core_id_map(R0_dapi, R0_dapi_stats, plot=False, out=_scene_dir) 
     
     # match across rounds + assign cluster labels to each component 
     cluster_labels = match.match_cores_across_rounds(res)
