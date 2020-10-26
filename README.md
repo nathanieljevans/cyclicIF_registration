@@ -95,6 +95,7 @@ $ python restitch_cores.py --results_path /home/exacloud/lustre1/NGSdev/evansna/
 ```
 
 For command line options, see: 
+
 ```bash
 $ python restitch_cores.py --help
 
@@ -118,7 +119,7 @@ optional arguments:
 Quality control is best implemented at the `re-stitching` step. There are three options, No QC, auto QC or manual QC.   
 
 `auto` QC will filter any round-core registrations that do not pass the thresholds specified in `config.py`.   
-`manual` QC can be performed by passing either a list (in `results.ipynb`) or a text file path (in `restitch_cores.py`) of cores that should not be restiched.   
+`manual` QC can be performed by passing either a dictionary (in `results.ipynb`) or as a json file (`restitch_cores.py --qc /path/to/file.json`) of cores that should not be restiched. For an example of a properly formatted json file, see [here](https://github.com/nathanieljevans/cyclicIF_registration/blob/master/workflow/scripts/manual_QC_example.json).  
 `None` will perform no QC and all cores/rounds will be re-stitched.   
 
  
