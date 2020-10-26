@@ -5,10 +5,10 @@ $ python restitch_cores.py --help
 for command line options 
 
 example
-$ python restitch_cores.py --results_path /home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/aggregated_results.csv --output /home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/S3/Scene-1/ --slide S3 --scene Scene-1 --qc None
+$ python restitch_cores.py --results_path /home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/aggregated_results.csv --output /home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/S3/Scene-1/ --slide S3 --scene Scene-1 --qc ./manual_QC_example.json
 
+Note, `manual_QC_example.json` is intended to be used with S3,Scene-1 and will remove all R0 cores in the first row, R1 cores in the second row, R2 cores in the third row. 
 
-If using an
 '''
 
 import sys, os
@@ -73,18 +73,19 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     if args.qc_method[0] in ['None', 'none', 'NONE', None]: 
+        print('No QC will be used') 
         qc_method = None 
         
     elif args.qc_method[0] in ['AUTO', 'Auto', 'auto']: 
+        print('auto QC will be used')
         qc_method = 'auto'
         
-    elif args.qc_method[0][-4:] == '.json': 
-        
+    elif args.qc_method[0][-5:] == '.json': 
+        print(f'manual QC will be used. loading file: {args.qc_method[0]}')
         # TODO: NEEDS TO BE TESTED 
         with open(args.qc_method[0]) as data_file:    
-            qc_method = json.load()
+            qc_method = json.load(data_file)
             
-        
     else: 
         print(f'unreconized qc method: {args.qc_method[0]}') 
         print('no qc will be done') 

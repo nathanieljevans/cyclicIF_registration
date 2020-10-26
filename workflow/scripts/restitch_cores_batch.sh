@@ -16,6 +16,6 @@ results_path=/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/aggregated_re
 output_dir=/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/S3/Scene-1/
 slide_name=S3
 scene_name=Scene-1
-QC=None # can be None or a file path 
+QC=./manual_QC_example.json # can be None, auto or a path to json file 
 
 python restitch_cores.py --results_path $results_path --output $output_dir --slide $slide_name --scene $scene_name --qc $QC
