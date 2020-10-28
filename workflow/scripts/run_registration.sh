@@ -1,9 +1,10 @@
 #!/bin/sh
 
-data_dir=/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/data
-out_dir=/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output
-slide_name=S3
-scene=Scene-1
+# the order of elements passed to the script will define these inputs below. 
+data_dir=$1 #/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/data
+out_dir=$2 #/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output
+slide_name=$3 #S3
+scene=$4 #Scene-1
 
 echo 'segmenting and matching cores...' 
 time {
