@@ -10,6 +10,15 @@ To set up a remote jupyter notebook kernel on exahead, follow [these](https://gi
 
 use `environment.yml` to set up conda environment. 
 
+```bash
+$ conda env create --file environment.yml
+```
+
+To activate the environment, use: 
+```bash
+$ conda activate cycIF_reg
+> (cycIF_reg) 
+```
 ## Pipeline 
 
 Currently, the data directories are hard coded into the `.sh` files. Future work will add command line functionality to define those. To edit this, open the `.sh` file and modify the variables at the top of the script to define `input`, `output`, `slide`, `scene`.
@@ -86,7 +95,7 @@ To see the core ID mapping, see `tutorial.ipynb` or `core_id_mapping.png` in the
 
 To re-stitch the cores back into a single `round-color` image, this can be done in the results notebook or command line interface. For time complexity, it is recommended to use the multithreaded option, which will visualize progress as (Note-progress bar is currently not working. environment issues): 
 
-<img src="img_stitching_prog2.gif" width="200">
+<img src="./docs/img_stitching_prog2.gif" width="200">
 
 To re-stitch images in command line, use: 
 
