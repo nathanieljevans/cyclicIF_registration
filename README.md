@@ -25,7 +25,7 @@ Currently, the data directories are hard coded into the `.sh` files. Future work
 
 To run the registration pipeline for a single experiment: 
 
-```$ ./run_registration.sh```
+```$ ./run_registration.sh /path/to/data/ /path/to/output/dir/ slide_name scene_name```
 
 To run this pipeline in parrallel, use: 
 
