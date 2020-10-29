@@ -28,44 +28,37 @@ def mmkdir(path, remove=True):
     elif not os.path.exists(path): 
         os.mkdir(path) 
         
-if __name__ == '__main__': 
-    print('starting `segment_and_match_cores.py`...') 
-    
-    parser = argparse.ArgumentParser(description='CyclicIF registration pipeline. Segmentation of cores & matching across rounds.')
-    parser.add_argument('--input', metavar='in', type=str, nargs=1,
-                        help='directory of input files (.tif slide scenes)')
-    parser.add_argument('--output', metavar='out', type=str, nargs=1,
-                        help='directory of output files (registered cores)')
-    parser.add_argument('--slide', metavar='slide', type=str, nargs=1,
-                        help='slide name (identifier)')
-    parser.add_argument('--scene', metavar='scene', type=str, nargs=1,
-                        help='scene name (identifier)')
-    args = parser.parse_args()
-    
+def main(inp, out, slide, scene): 
+    '''
+        inp     input directory 
+        out      output directory 
+        slide     slidename 
+        scene    scene name 
+    '''
     # make output directory 
-    mmkdir(args.output[0], remove=False)
+    mmkdir(out, remove=False)
     
     # make dir for slide 
-    _slide_dir = args.output[0] + '/' + args.slide[0]
+    _slide_dir = out + '/' + slide
     mmkdir(_slide_dir)
         
     # make dir for scene 
-    _scene_dir = _slide_dir + '/' + args.scene[0]
+    _scene_dir = _slide_dir + '/' + scene
     mmkdir(_scene_dir) 
         
     # load in and parse all files in input directory 
-    img_file_names = os.listdir(args.input[0])
+    img_file_names = os.listdir(inp)
     parsed_names = pd.DataFrame([utils.parse_file_name(x) for x in img_file_names if x[-4:] == '.tif'])
     
     # filter to single experiment (eg slide_name, scene) 
-    parsed_names = parsed_names[parsed_names.slide_name == args.slide[0]]
-    parsed_names = parsed_names[parsed_names.scene == args.scene[0]]
+    parsed_names = parsed_names[parsed_names.slide_name == slide]
+    parsed_names = parsed_names[parsed_names.scene == scene]
     
     # load images into memory 
     imgs = {}
     for i,path in enumerate(parsed_names.original.values): 
         print(f'loading images... progress: {i}/{parsed_names.original.values.shape[0]}', end='\r')
-        imgs[path] = sitk.ReadImage(config.image_dir_path + path)
+        imgs[path] = sitk.ReadImage(inp + '/' + path)
     
     # segment cores and get statistics 
     res, R0_dapi = match.get_all_rounds_core_statistics(parsed_names, imgs, verbose=True, return_R0_dapi=True)
@@ -102,6 +95,27 @@ if __name__ == '__main__':
             
             # save image to file 
             sitk.WriteImage(_core, f'{_core_dir}/unregistered_core={_cluster_label}_round={row["round"]}_color={row.color_channel}.tif')
+    
+    
+    
+        
+if __name__ == '__main__': 
+    print('starting `segment_and_match_cores.py`...') 
+    
+    parser = argparse.ArgumentParser(description='CyclicIF registration pipeline. Segmentation of cores & matching across rounds.')
+    parser.add_argument('--input', metavar='in', type=str, nargs=1,
+                        help='directory of input files (.tif slide scenes)')
+    parser.add_argument('--output', metavar='out', type=str, nargs=1,
+                        help='directory of output files (registered cores)')
+    parser.add_argument('--slide', metavar='slide', type=str, nargs=1,
+                        help='slide name (identifier)')
+    parser.add_argument('--scene', metavar='scene', type=str, nargs=1,
+                        help='scene name (identifier)')
+    args = parser.parse_args()
+    
+    main(args.input[0], args.output[0], args.slide[0], args.scene[0])
+    
+    
             
             
     

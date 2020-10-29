@@ -2,7 +2,7 @@ import pandas as pd
 import SimpleITK as sitk 
 import config 
 import segment
-from k_means_constrained import KMeansConstrained # need to cite - https://github.com/joshlk/k-means-constrained
+#from k_means_constrained import KMeansConstrained # need to cite - https://github.com/joshlk/k-means-constrained
 import numpy as np
 from sklearn.cluster import DBSCAN
 
@@ -77,10 +77,12 @@ def match_cores_across_rounds(info, verbose=True, method=config.clustering_metho
     if verbose: print('using clustering method:', method)
         
     if method == 'k-means-constrained': 
+        print('this method is deprecated, use method "dbscan"')
         # https://github.com/joshlk/k-means-constrained
-        clus = KMeansConstrained(n_clusters=num_R0_components, init=seeds, size_max=num_of_rounds, n_init=1, tol=1e-8, max_iter=1000)
-        _ = clus.fit(X)
-    
+        #clus = KMeansConstrained(n_clusters=num_R0_components, init=seeds, size_max=num_of_rounds, n_init=1, tol=1e-8, max_iter=1000)
+        #_ = clus.fit(X)
+        raise ValueError('invalid clustering method- use dbscan')
+
     elif method == 'dbscan':
         clus = DBSCAN(eps=config.eps, min_samples=config.min_samples).fit(X)
         
