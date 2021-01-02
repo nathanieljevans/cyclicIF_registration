@@ -4,8 +4,41 @@ general utility functions
 
 import SimpleITK as sitk
 from matplotlib import pyplot as plt 
-
+from mantichora import mantichora
+from atpbar import atpbar
 import time
+import sys
+
+def check_for_duplicates(df, cols): 
+    return len(df[cols])-len(df[cols].drop_duplicates())
+
+def load_imgs_mt(img_paths, base_path, _type=sitk.sitkUInt8): 
+    '''
+    threading to load images into memory faster 
+    '''
+    print('starting multithreaded image loading...')
+    def load_image(path, tid, ntid):
+        im = sitk.ReadImage(path, _type)
+        im.SetSpacing((1,1))
+        print(f'finished task: {tid}/{ntid}', end='\r')
+        return (path.split('/')[-1], im)
+
+    nimgs = len(img_paths)
+
+    with mantichora(mode='threading', nworkers=16) as mcore: 
+        print('assigning threads...', end='')
+        for i,path in zip(range(nimgs), img_paths): 
+            mcore.run(load_image, base_path + '/' + path, i, nimgs)
+        print('done.') 
+        print('waiting for threads to complete.')
+        returns = mcore.returns()
+        
+    print()
+    print('threads complete.')
+    imgs = {item[0] : item[1] for item in returns}
+    print()
+    print('...image loading complete.')
+    return imgs
 
 def parse_core_name(path): 
     '''
@@ -21,26 +54,29 @@ def parse_core_name(path):
 def parse_file_name(f): 
     '''
     '''
-    multiscene = 'Scene' in f
-    
-    f2 = f.split('_')
-    
-    R, protein, slide = f2[:3]
-    
-    date = '-'.join(f2[3:6])
-    
-    scene=None
-    if multiscene: 
-        scan, scene = f2[7].split('-', 1)
-    else: 
-        scan = f2[7]
+    try:
+        multiscene = 'Scene' in f
         
-    color = f2[8]
-    note, ftype = f2[9].split('.')
-    
-    names = "round,protein,slide_name,date,scan_id,scene,color_channel,note,file_type,original".split(',')
-    res = {n:v for n,v in zip(names, [R,protein,slide,date,scan,scene,color,note, ftype,f])}
-    return res
+        f2 = f.split('_')
+        
+        R, protein, slide = f2[:3]
+        
+        date = '-'.join(f2[3:6])
+        
+        scene='None'
+        if multiscene: 
+            scan, scene = f2[7].split('-', 1)
+        else: 
+            scan = f2[7]
+            
+        color = f2[8]
+        note, ftype = f2[9].split('.')
+        
+        names = "round,protein,slide_name,date,scan_id,scene,color_channel,note,file_type,original".split(',')
+        res = {n:v for n,v in zip(names, [R,protein,slide,date,scan,scene,color,note, ftype,f])}
+        return res
+    except: 
+        print('PARSING FAILED - filename: ', f)
 
 def myshow(img, title='', figsize=(7,7), ax=None):
     '''
@@ -58,7 +94,24 @@ def myshow(img, title='', figsize=(7,7), ax=None):
         plt.show()
            
            
-           
+def load_config(path, verbose=True): 
+    '''
+    loads the config namespace into an object so that it's accessible 
+    input
+        path <str>     path to config object
+
+    output 
+        namespace
+    '''
+    sys.path.append(path)                     # temporarily append config path    
+    import config                             # load namespace
+
+    if verbose: print('loading config file from:', config.myloc)
+
+    return config
+
+
+
            
            
            

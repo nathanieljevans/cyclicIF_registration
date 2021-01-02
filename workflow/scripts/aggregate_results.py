@@ -20,10 +20,8 @@ import pandas as pd
 import sys, os
 sys.path.append('../libs/')
 import utils
-import config
 import segment 
 import match 
-import missingness 
 import register 
 import evaluate 
 import qc
@@ -60,6 +58,10 @@ if __name__ == '__main__':
                     # meta contains the original data 
                     meta = pd.read_csv(core_path + 'core_meta.csv')
 
+                    # check for duplicates in results
+                    ndups = utils.check_for_duplicates(meta, ['round', 'color_channel'])
+                    assert ndups == 0, f'there are {ndups} duplicates in `core_meta.csv` of {core_name}'
+
                     # break meta into two parts, one with original slide name - which shouldn't be propagated to other channels 
                     # this should be propagated only to dapi rounds - keyed by round, channel
                     meta1 = meta[['round','color_channel','img_name', 'protein']]
@@ -75,23 +77,43 @@ if __name__ == '__main__':
                     # results contain registration metrics for dapi channels (c1) + some redundant info with parsed_names 
                     results = pd.read_csv(core_path + 'registration_eval.csv') 
 
+                    # check for duplicates in results
+                    ndups = utils.check_for_duplicates(results, ['path'])
+                    assert ndups == 0, f'there are {ndups} duplicates in `registration_eval.csv` of {core_name}'
+
                     # slide_name and scene are not included - because we've already navigated into the file structure - has to be same scene/slide_name
                     dat = parsed_names.merge(meta1, on=['round', 'color_channel'], how='left') 
 
+                    # check for duplicates in results
+                    ndups = utils.check_for_duplicates(dat, ['status', 'round', 'color_channel'])
+                    assert ndups == 0, f'there are {ndups} duplicates after meta1 merge of {core_name}'
+
                     # keyed by round only - propagate dapi channel core segmentation features to the other channels - also includes slide_name, scene (which we need later)
                     dat = dat.merge(meta2, on=['round'], how='left')
+
+                    # check for duplicates in results
+                    ndups = utils.check_for_duplicates(dat, ['status', 'round', 'color_channel'])
+                    assert ndups == 0, f'there are {ndups} duplicates after meta2 merge of {core_name}'
 
                     # need same data types
                     results.core == results.core.astype(int)
                     dat.core = dat.core.astype(int)
 
+                    # assign registration status for merge on
+                    results = results.assign(status=[x.split('_')[0] for x in results.path.values])
+                    #print('results\n', print(results[['path', 'status']].head()))
+
                     # we really only need the registration metrics and round - other data in results is redundant and causes merge issues
-                    results = results[['round','jacaard_coef','dice_coef','volume_similarity','false_pos_err','false_neg_err','hausdorff_dist']]
+                    results = results[['round', 'status', 'jacaard_coef','dice_coef','volume_similarity','false_pos_err','false_neg_err','hausdorff_dist']]
 
                     # note color channel not included here: we want to propagate registration results to all channels 
-                    dat = dat.merge(results, on=['round'], how='left') 
+                    dat = dat.merge(results, on=['round', 'status'], how='left') 
 
                     dat = dat.assign(registered_path=lambda x: core_path + '/' + x.path)
+
+                    # check for duplicates in results
+                    ndups = utils.check_for_duplicates(dat, ['path'])
+                    assert ndups == 0, f'there are {ndups} duplicates in merged reg. eval. results of {core_name}'
 
                     _all.append(dat)
 
@@ -101,7 +123,12 @@ if __name__ == '__main__':
             print()
 
     _all = pd.concat(_all, axis=0, ignore_index=True) 
-    _all.to_csv(args.dir[0] + '/aggregated_results.csv', index=False)
+
+    # check for duplicates in results
+    ndups = utils.check_for_duplicates(_all, ['path'])
+    assert ndups == 0, f'there are {ndups} duplicates in `aggregated_results.csv`'
+
+    _all.to_csv(args.dir[0] + '/aggregated_results.csv', index=False, mode='w')
     print('completed results aggregation.')
             
             

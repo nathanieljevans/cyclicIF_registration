@@ -1,15 +1,18 @@
 import SimpleITK as sitk
-import config
 
-def get_registration_transform(fixed, moving, verbose=True): 
+def get_registration_transform(fixed, moving, config=None, verbose=True): 
     '''
     '''
+    assert config is not None, 'config is none, pass config object'
     
     # make sure imgs are Float32's 
     fixed =  sitk.Cast(fixed, sitk.sitkFloat32)
     moving = sitk.Cast(moving, sitk.sitkFloat32)
+
+    # do we need to rescale the data ?
+    fixed = sitk.RescaleIntensity(fixed, 0)
     
-    # normalize values?
+    # normalize values? - should this be done?
     fixed = sitk.Normalize(fixed)
     moving = sitk.Normalize(moving)
     

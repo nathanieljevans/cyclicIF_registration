@@ -2,7 +2,6 @@
 '''
 import SimpleITK as sitk
 from matplotlib import pyplot as plt
-import config
 import utils
 import numpy as np
 import os
@@ -47,7 +46,7 @@ def plot_core_reg(core, output_dir='/home/exacloud/lustre1/NGSdev/evansna/cyclic
         #raise
         
         
-def restitch_image(dat, _round, _channel, qc=None, output_dir='../output/S3/Scene-1', save=True, verbose=True): 
+def restitch_image(dat, _round, _channel, output_dir, config=None, qc=None, save=True, verbose=True, pbar=None): 
     '''
     restitch a set of images. The core locations are maintained relative to R0-dapi original core locations. 
     
@@ -56,17 +55,25 @@ def restitch_image(dat, _round, _channel, qc=None, output_dir='../output/S3/Scen
         _round      <str>            round to use for restitching 
         _channel    <str>            color channel to use for restitching
         qc          <str or list>    qc method to employ, can be [None, 'auto', List]. If None, no qc is done. If 'auto', the hardcoded thresholds are used to remove poorly registered cores. If List<of int>, core ID's included in the list will be removed.  
-        output_dir  <str>            where to save the re-stitched images 
         save        <bool>           option to save to file, will save in `output_dir` and use the original image name appended with '-registered.tif'
+        pbar        <generator>      atpbar generator
     output 
         joined_image   <sitk Image>  Restitched image with all cores, excluding qc 
     '''
+
     assert (qc in [None, 'auto']) | (type(qc) == type([])), f'Invalid value: qc can be None, "auto" or a List object, got: {qc} [{type(qc)}]'
     
     # we'll use the R0 dapi core positions as the core mapping 
     c1R0_res = dat[lambda x: (x['round'] == 'R0') & (x['color_channel'] == 'c1')][['core','center_x','center_y','width', 'height']].drop_duplicates().set_index('core')
     
+    #! DELETE THIS WHEN DONE VVV
+    #import pandas as pd
+    #pd.set_option("display.max_rows", None, "display.max_columns", None)
+    #print(c1R0_res[c1R0_res['core'] == 0].head())
+    #! DELETE THIS WHEN DONE ^^^
+
     # calculate the necessary size of the restitched image
+    # TODO: this needs to be the same size as the R0 image
     full_size_x = int(c1R0_res.center_x.max() + c1R0_res.width.max())*config.downsample_proportion  # ensures our final image is large enough to include all the cores
     full_size_y = int(c1R0_res.center_y.max() + c1R0_res.height.max())*config.downsample_proportion # 
 
@@ -80,7 +87,7 @@ def restitch_image(dat, _round, _channel, qc=None, output_dir='../output/S3/Scen
     Rxc1_name = Rxc1_name[0]
     
     # create an empty image of the proper size 
-    joined_image = sitk.Image(full_size_x, full_size_y, sitk.sitkFloat32)
+    joined_image = sitk.Image(full_size_x, full_size_y, sitk.sitkUInt8)
     joined_image.SetSpacing((config.pixel_width, config.pixel_height))
     
     ###########################################################################
@@ -105,16 +112,25 @@ def restitch_image(dat, _round, _channel, qc=None, output_dir='../output/S3/Scen
     # resample each core of size `joined_image` then combine by addition 
     for i, row in imDat.sort_values('core').iterrows(): 
 
-        if verbose: print(f'\t\tresampling core {(_round, _channel)}: {row.core}', end='\r')
+        #if verbose: print(f'\t\tresampling core {(_round, _channel)}: {row.core}', end='\r')
 
         # get core position [in microns]
         cx = c1R0_res.loc[row.core].center_x * config.downsample_proportion * config.pixel_width
         cy = c1R0_res.loc[row.core].center_y * config.downsample_proportion * config.pixel_height
 
+        #print(cx)
+        #print(cy)
+        #print(type(cx))
+        #print(type(cy))
+
+        cx = int(cx.item())
+        cy = int(cy.item())
+
         # read registered core into memory (UNLESS ITS R0-then unregistered)
         # TODO: compare `restitiched` R0 against original R0 - there should be minimal changes! check for image quality loss, etc.. 
-        _im = sitk.ReadImage(row.registered_path, sitk.sitkUInt32)
+        _im = sitk.ReadImage(row.registered_path, sitk.sitkUInt8)
         _im.SetSpacing((config.pixel_width, config.pixel_height))
+
         _im.SetOrigin((cx, cy))
 
         # resample using linear interpolator 
@@ -136,16 +152,20 @@ def restitch_image(dat, _round, _channel, qc=None, output_dir='../output/S3/Scen
         # 'R0_AF488.AF555.AF647.AF750_S3_2020_01_21__13471-Scene-1_c1_ORG.tif'
         #                                                         | |   |
         #                                                       -10-8  -4  
-        fname = output_dir + Rxc1_name[:-10] + _channel + Rxc1_name[-8:-4] + '_registered.tif'
+        fname = output_dir + Rxc1_name[:-10] + _channel + Rxc1_name[-8:-4] + '.tif'
         #print('\n\tsaving re-stitched image to:', fname)
         sitk.WriteImage(joined_image, fname)
-        
-    return joined_image
+
+    next(pbar)
+    
+    #return joined_image
 
 
-def choose_and_viz(data_dir='../output/S3/'): 
+def choose_and_viz(config): 
     '''
     '''
+    data_dir=config.data_dir
+
     opt = np.sort([x for x in os.listdir(data_dir) if x[-4:]=='.tif'])
 
     R = widgets.Dropdown(
@@ -208,16 +228,17 @@ def choose_and_viz(data_dir='../output/S3/'):
         print('\tchannel 2 (B): ', B.value)
         print('\tchannel 3 (G): ', G.value)
         utils.myshow(cimg, title='registered re-stitched image overlay', figsize=(15,15))
-        
 
     GO.on_click(on_button_clicked)
 
     display(R,G,B,GO)
     
     
-def choose_and_plot_core(output_dir='/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output'): 
+def choose_and_plot_core(config): 
     '''
     '''
+    output_dir = config.output_dir
+
     slide_opt = sorted([x for x in os.listdir(output_dir) if os.path.isdir(output_dir + '/' + x)]) + ['None']
     
     def on_change1(change):

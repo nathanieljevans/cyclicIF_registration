@@ -16,13 +16,14 @@ import argparse
 
 sys.path.append('../libs/')
 import utils
-import config
 import segment 
 import match 
-import missingness 
 import register 
 import evaluate 
 import qc 
+
+from mantichora import mantichora
+from atpbar import atpbar
 
 import threading
 import pandas as pd
@@ -41,13 +42,6 @@ if __name__ == '__main__':
                         nargs=1, 
                         default='/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/aggregated_results.csv',
                         help='registration results csv path')
-    
-    parser.add_argument('--output', 
-                        dest='output', 
-                        type=str, 
-                        nargs=1, 
-                        default='/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/S3/Scene-1/',
-                        help='output directory where the restitched images will be written to disk.')
     
     parser.add_argument('--slide', 
                         dest='slide', 
@@ -69,6 +63,19 @@ if __name__ == '__main__':
                         nargs=1,
                         default='None',
                         help='qc method: Can be ["None", "Auto", "/path/to/json/file/with/core/ids/to/filter"]')
+
+    parser.add_argument('--config', 
+                        dest='config_path', 
+                        type=str, 
+                        nargs=1,
+                        default='None',
+                        help='path to the directory where local config.py file is stored')
+
+    parser.add_argument('--output', 
+                        dest='output', 
+                        type=str, 
+                        nargs=1,
+                        help='directory destination to save the restitched images')
                         
     args = parser.parse_args()
     
@@ -81,7 +88,7 @@ if __name__ == '__main__':
         qc_method = 'auto'
         
     elif args.qc_method[0][-5:] == '.json': 
-        print(f'manual QC will be used. loading file: {args.qc_method[0]}')
+        print(f'json file QC will be used. loading file: {args.qc_method[0]}')
         # TODO: NEEDS TO BE TESTED 
         with open(args.qc_method[0]) as data_file:    
             qc_method = json.load(data_file)
@@ -93,47 +100,46 @@ if __name__ == '__main__':
     
     # Load aggregated_results.csv into mem 
     res = pd.read_csv(args.results[0])
-    print(res.shape)
 
     # select only registered results -- keep R0 unregistered as this is the aligned reference 
     res = res[(res.status == 'registered') | (res['round'] == 'R0')]
-    print(res.shape)
     
     # filter to specific slide/scene 
     res = res[(res.slide_name == args.slide[0]) & (res.scene == args.scene[0])]
-    print(res.shape)
-    print(args.slide[0])
-    print(args.scene[0])
     
-    # TODO - if passed a text file path for QC, need to parse it and make it a list to pass to the method below. 
-    
+    # load config object 
+    config = utils.load_config(args.config_path[0])
+
     # run multithreading to speed this process up 
     print('assigning threads...')
-    threads=[]
-    for _round in np.sort(res['round'].unique()): 
-        _temp = res[lambda x: (x['round'] == _round)]
-        for _channel in np.sort(_temp['color_channel'].unique()): 
-            print(f'\t\t\t\t {(_round, _channel)}')
-            
-            # parse the dictionary for manual qc. 
-            if type(qc_method) == type({}): 
-                if _round in qc_method.keys(): 
-                    _qc_method = qc_method[_round]
-                else: 
-                    _qc_method=None
-            else: 
-                _qc_method = qc_method
-            
-            t = threading.Thread(target=qc.restitch_image, args = (res, _round, _channel, _qc_method, args.output[0], True, True))
-            t.daemon = True
-            t.start()
-            threads.append(t)
-    
-    # prevent calls on the thread and wait for it to finish executing         
-    for t in threads:
-        t.join()
 
-    print('...done')
+    all_rounds = np.sort(res['round'].unique())
+    pbar = iter(atpbar(range(all_rounds.shape[0]*5 + 1), 'restitiching images'))
+    next(pbar)
+    with mantichora(mode='threading', nworkers=10) as mcore:
+
+        for _round in all_rounds: 
+            _temp = res[lambda x: (x['round'] == _round)]
+            for _channel in np.sort(_temp['color_channel'].unique()): 
+                #print(f'\t\t\t\t {(_round, _channel)}')
+                
+                # parse the dictionary for manual qc. 
+                if type(qc_method) == type({}): 
+                    if _round in qc_method.keys(): 
+                        _qc_method = qc_method[_round]
+                    else: 
+                        _qc_method=None
+                else: 
+                    _qc_method = qc_method
+                
+                mcore.run(qc.restitch_image, res, _round, _channel, args.output[0], config, _qc_method, True, True, pbar)
+            
+        returns = mcore.returns()
+    for i in pbar: 
+        pass # finish pbar 
+    
+
+    print('restitching complete.')
 
     
     

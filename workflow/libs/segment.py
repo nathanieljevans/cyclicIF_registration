@@ -1,20 +1,23 @@
 import SimpleITK as sitk
 from matplotlib import pyplot as plt 
 from matplotlib import patches as patches
-import config
 import pandas as pd
 import numpy as np
-
 import utils
+import warnings
 
-def segment_dapi_round(img, plot=False): 
+
+def segment_dapi_round(img, config=None, plot=False, verbose=False): 
     '''
     This includes gaussian blur 
     
     plot = verbose and plotting
     '''
-    if plot: print('rescaling img..')
+    assert config is not None, 'config is none, pass config object'
+
+    if verbose: print('rescaling img..')
     img = sitk.RescaleIntensity(img)
+
     img = sitk.Cast(img, sitk.sitkUInt8)
 
     # add a blur to eliminate small componentns
@@ -22,9 +25,10 @@ def segment_dapi_round(img, plot=False):
     # ~1e-4 is appropriate <- no downsampling
     # ~1e-3 with 10x downsamping 
     
-    if plot: print('applying gaussing blur...')
+    if verbose: print('applying gaussing blur...')
     gaussian = sitk.DiscreteGaussianImageFilter()
-    gaussian.SetVariance( config.gaussian_blur_variance )
+    gaussian.SetVariance( (config.gaussian_blur_variance, config.gaussian_blur_variance) )
+    gaussian.SetMaximumKernelWidth(1000)
     img_blur = gaussian.Execute ( img )
 
     #if plot: print('otsu thresholding...')
@@ -36,8 +40,6 @@ def segment_dapi_round(img, plot=False):
     seg_thresh = np.quantile(sitk.GetArrayViewFromImage(img_blur).ravel(), config.core_seg_quantile)
     seg = img_blur > seg_thresh
     
-    plt.figure()
-
     if plot:
         plt.figure()
         plt.title('pixel intensity histogram')
@@ -45,7 +47,7 @@ def segment_dapi_round(img, plot=False):
         plt.axvline(seg_thresh, c='r', label='threshold')
         plt.legend()
         plt.show()
-        
+
         utils.myshow(seg)
 
     #if plot: print('watershed threshold...')
@@ -111,26 +113,26 @@ def segment_dapi_round(img, plot=False):
     
     return stats, shape_stats
 
-def generate_core_id_map(img, shape_stats): 
-    '''
-    Generate a downsampled image of R0-C1 (dapi) image where each core bounding box is labeled with it's corresponding identifier. 
-    '''
-    
-    pass
 
 
-
-def select_core(img, label, stats, scale=1): 
+def select_core(img, label, stats, config=None, scale=1): 
     '''
     takes full round image, and retrieves the label region of interest, as specified by shape stats. Optional scaling if using downsampled image for segmentation. 
     '''
-    
+    assert config is not None, 'config is none, pass config object'
+
     _max_x, _max_y = img.GetSize()
     
     stats = stats[stats.component == label]
-        
-    assert stats[['center_x','center_y','width','height']].drop_duplicates().shape[0] == 1, 'ambiguous number of bounding box stats, try filtering dataframe to a single round prior to selecting core' 
     
+    if stats[['center_x','center_y','width','height']].drop_duplicates().shape[0] > 1: 
+        
+        if len(label) > 1:
+            #warnings.warn('Two or more core components from the same round were assigned to the one cluster. Only the first component will be used. Consider tuning the segmentation parameters to prevent this in the future.')
+            stats = stats[stats.component == label.values[0]]
+        else: 
+            raise ValueError(f'`select_core` got an ambiguous number of bounding box stats, try filtering dataframe to a single round prior to selecting cores')
+            
     x = stats.center_x.values[0]
     y = stats.center_y.values[0]
     width = stats.width.values[0]
@@ -147,15 +149,17 @@ def select_core(img, label, stats, scale=1):
     return roi
     
 
-def plot_cores(img, stats): 
+def plot_cores(img, stats, config): 
     '''
     '''
-    nrows = int(len(stats.component.unique()) / 10 + 1)
-    f,axes = plt.subplots(nrows,10, figsize=(15,15))
+    ncomp = len(stats.component.unique())
+    rowsize = 10 if ncomp > 10 else ncomp
+    nrows = int(ncomp / 10 + 1)
+    f,axes = plt.subplots(nrows, rowsize, figsize=(15,15))
 
     for i,(label,ax) in enumerate(zip(stats.component.unique(), axes.flat)): 
         print(f'progress: {i}/{len(stats.component.unique())}', end='\r')
-        roi = select_core(img, label, stats)
+        roi = select_core(img, label, stats, config=config)
         
         ax.imshow(sitk.GetArrayViewFromImage(roi))
         ax.set_title(label)
@@ -169,28 +173,33 @@ def perform_otsu_threshold(img):
     '''
     This generates a core segmentation used for evaluating registration success metrics. 
     '''
-    img = sitk.Cast(sitk.RescaleIntensity(img), sitk.sitkUInt8)
+    #img = sitk.Cast(sitk.RescaleIntensity(img), sitk.sitkUInt16)
 
     otsu_filter = sitk.OtsuThresholdImageFilter()
     otsu_filter.SetInsideValue(0)
     otsu_filter.SetOutsideValue(1)
     seg = otsu_filter.Execute(img)
+
     return seg
 
-def generate_core_id_map(img, stats, plot=True, out='/home/exacloud/lustre1/NGSdev/evansna/cyclicIF/output/S3/Scene-1'): 
+def generate_core_id_map(img, stats, config=None, plot=True): 
     '''
     Generate a downsampled image of R0-C1 (dapi) image where each core bounding box is labeled with it's corresponding identifier. 
     
     inputs: 
     img            <sitk.image>       should be the downsampled image of R0-C1 (dapi) from which shape statistics were calculated. 
     stats          <pd.dataframe>     shape statistics calculated during image segmentation
-    out            <str>              output directory to save image to; if none, not saved 
     
     outputs: 
     shape statistic results [, downsampled R0-c1 (dapi) image] 
     '''
+    assert config is not None, 'config is none, pass config object'
+
+    out = config.output_dir + '/' + config.slide_name + '/' + config.scene_name
+
+    img = sitk.Cast(sitk.RescaleIntensity(img), sitk.sitkUInt8)
     
-    img_arr = sitk.GetArrayViewFromImage(img)#.astype(np.uint8)
+    img_arr = sitk.GetArrayViewFromImage(img)
         
     # Create figure and axes
     fig,ax = plt.subplots(1, figsize=(15,15))

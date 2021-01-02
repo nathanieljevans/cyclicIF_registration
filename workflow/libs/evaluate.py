@@ -50,7 +50,7 @@ def eval_registration(fixed, moving, name, plot=True):
     reg_eval['false_pos_err'] = overlap_measures_filter.GetFalsePositiveError()
 
     # Hausdorff distance
-    hausdorff_distance_filter.Execute(fixed_seg, moving_seg)
+    hausdorff_distance_filter.Execute(fixed, moving)
     reg_eval['hausdorff_dist'] = hausdorff_distance_filter.GetHausdorffDistance()
     
     return reg_eval
