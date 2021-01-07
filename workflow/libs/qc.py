@@ -200,7 +200,7 @@ def choose_and_viz(config):
 
     def on_button_clicked(b):
         clear_output()
-        choose_and_viz(data_dir=data_dir)
+        choose_and_viz(config)
         
         print('this can take a few moments...')
 
@@ -249,8 +249,8 @@ def choose_and_plot_core(config):
             scene_opt=sorted([x for x in os.listdir(output_dir + '/' + slide) if os.path.isdir(output_dir +'/' + slide + '/' + x)]) + ['None']
             
             sceneW = widgets.Dropdown(
-                options=scene_opt,
-                value='None',
+                options=scene_opt + ['NA'],
+                value='NA',
                 description='scene:',
                 disabled=False
                 )
@@ -262,8 +262,8 @@ def choose_and_plot_core(config):
                     core_opt=sorted([x for x in os.listdir(output_dir + '/' + slide + '/' + scene) if os.path.isdir(output_dir + '/' + slide + '/' + scene + '/' + x)]) + ['None']
 
                     coreW = widgets.Dropdown(
-                        options=core_opt,
-                        value='None',
+                        options=core_opt + ['NA'],
+                        value='NA',
                         description='core:',
                         disabled=False
                         )
