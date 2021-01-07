@@ -74,8 +74,9 @@ def restitch_image(dat, _round, _channel, output_dir, config=None, qc=None, save
 
     # calculate the necessary size of the restitched image
     # TODO: this needs to be the same size as the R0 image
-    full_size_x = int(c1R0_res.center_x.max() + c1R0_res.width.max())*config.downsample_proportion  # ensures our final image is large enough to include all the cores
-    full_size_y = int(c1R0_res.center_y.max() + c1R0_res.height.max())*config.downsample_proportion # 
+    temp = c1R0_res.assign(max_x=lambda x: x.center_x + x.width, max_y=lambda x: x.center_y + x.height)
+    full_size_x = int(temp.max_x.max())*config.downsample_proportion  # ensures our final image is large enough to include all the cores
+    full_size_y = int(temp.max_y.max())*config.downsample_proportion # 
 
     # filter to round and core; this is what we can use for hard path ref
     imDat = dat[lambda x: (x['round'] == _round) & (x['color_channel'] == _channel)]

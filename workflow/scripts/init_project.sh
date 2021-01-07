@@ -24,9 +24,11 @@ cp ../../tutorial.ipynb $out/tutorial.ipynb
 
 cp ../../results.ipynb $out/results.ipynb
 
-cp ../../results.ipynb $out/full_slide_registration_evaluation.ipynb
+cp ../../full_slide_registration_evaluation.ipynb $out/full_slide_registration_evaluation.ipynb
 
-cp ../../results.ipynb $out/QC_plots.ipynb
+cp ../../QC_plots.ipynb $out/QC_plots.ipynb
+
+cp ../../dedusting_eval.ipynb $out/dedusting_eval.ipynb
 
 cp run_experiment_registration.sh $out/run_experiment_registration.sh
 

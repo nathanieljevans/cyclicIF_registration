@@ -66,7 +66,7 @@ def main(inp, out, slide, scene, config_path):
     
     # create core id mapping 
     R0_dapi_stats = res[lambda x: x['round'] == 'R0']
-    segment.generate_core_id_map(R0_dapi, R0_dapi_stats, config=config, plot=False) 
+    segment.generate_core_id_map(R0_dapi, R0_dapi_stats, out, config=config, plot=False) 
     
     # match across rounds + assign cluster labels to each component 
     cluster_labels = match.match_cores_across_rounds(res, config=config)
@@ -79,18 +79,19 @@ def main(inp, out, slide, scene, config_path):
             
             res_choice = res[res.cluster == _cluster_label]
 
-            # check that R0 is included in the cluster - if not, we'll just skip the cluster since
+            # check that R0 is included in the cluster - if not, we'll just skip the cluster since there is nothing to register to
             # TODO: use R1 as fixed choice... note - this is also relevant in register core - without R0, it'll fail as is
             if len(res_choice[lambda x: x['round'] == 'R0'])==0: 
                 print(f'core cluster {_cluster_label} has no R0 image - skipping')
                 continue
 
-            # need to add check for >1 round being present. e.g., 2 Rounds of R8 ... in such cases remove the observation thats less similar
+            # need to add check for >1 round being present. e.g., 2 Rounds of R8 ... in such cases, remove the observation thats less similar
             ndups = utils.check_for_duplicates(res_choice, ['round'])
 
             if ndups > 0: 
                 R0 = res_choice[lambda x: (x['round'] == 'R0')]
-                # TODO what if R0 is a duplicate??? - currently, it fails
+                # TODO what if there are duplicate cores from R0??? - currently, it fails
+                assert R0.shape[0] == 1, f'Duplicate R0 cores in cluster {_cluster_label}. Will be excluded from analysis.'
                 R0x = R0.center_x.item()
                 R0y = R0.center_y.item()
                 bool_ind = res_choice.duplicated(subset=['round'], keep=False)

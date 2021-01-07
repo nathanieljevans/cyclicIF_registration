@@ -182,7 +182,7 @@ def perform_otsu_threshold(img):
 
     return seg
 
-def generate_core_id_map(img, stats, config=None, plot=True): 
+def generate_core_id_map(img, stats, out, config=None, plot=True): 
     '''
     Generate a downsampled image of R0-C1 (dapi) image where each core bounding box is labeled with it's corresponding identifier. 
     
@@ -195,7 +195,7 @@ def generate_core_id_map(img, stats, config=None, plot=True):
     '''
     assert config is not None, 'config is none, pass config object'
 
-    out = config.output_dir + '/' + config.slide_name + '/' + config.scene_name
+    #out = config.output_dir + '/' + config.slide_name + '/' + config.scene_name
 
     img = sitk.Cast(sitk.RescaleIntensity(img), sitk.sitkUInt8)
     
