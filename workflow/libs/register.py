@@ -9,25 +9,40 @@ def get_registration_transform(fixed, moving, config=None, verbose=True):
     fixed =  sitk.Cast(fixed, sitk.sitkFloat32)
     moving = sitk.Cast(moving, sitk.sitkFloat32)
 
-    # do we need to rescale the data ?
-    fixed = sitk.RescaleIntensity(fixed, 0)
+    # do we need to rescale the data ? This scales data to 0,256 <- badddd
+    #fixed = sitk.RescaleIntensity(fixed, 0)
     
-    # normalize values? - should this be done?
+    # Normalize data - important for learning rate scaling
     fixed = sitk.Normalize(fixed)
     moving = sitk.Normalize(moving)
     
     # define registration parameters 
     R = sitk.ImageRegistrationMethod()
+    #R.SetNumberOfThreads(10)
     
     #R.SetMetricAsMeanSquares()
     R.SetMetricAsMattesMutualInformation(numberOfHistogramBins=config.num_hist_bins)
     
     #R.SetOptimizerAsConjugateGradientLineSearch(learningRate=config.learning_rate, numberOfIterations=config.iterations)
-    R.SetOptimizerAsRegularStepGradientDescent(learningRate=config.learning_rate, 
-                                               minStep=config.min_step, 
-                                               numberOfIterations=config.iterations)
-    
-    R.SetInitialTransform(sitk.TranslationTransform(fixed.GetDimension()))
+    #R.SetOptimizerAsRegularStepGradientDescent(learningRate=config.learning_rate, 
+    #                                           minStep=config.min_step, 
+    #                                           numberOfIterations=config.iterations)
+    #R.SetOptimizerAsGradientDescentLineSearch(learningRate=config.learning_rate, 
+    #                                           numberOfIterations=config.iterations,
+    #                                           convergenceMinimumValue=1e-8)
+    R.SetOptimizerAsPowell(numberOfIterations=config.iterations,
+                            maximumLineIterations=config.iterations,
+                            stepLength=config.stepLength,
+                            stepTolerance=config.stepTolerance,
+                            valueTolerance=config.valueTolerance)
+    #initial_transform = sitk.TranslationTransform(fixed.GetDimension())
+    #initial_transform = sitk.Euler2DTransform()
+    initial_transform = sitk.CenteredTransformInitializer(fixed, 
+                                                      moving, 
+                                                      sitk.Euler2DTransform(), 
+                                                      sitk.CenteredTransformInitializerFilter.GEOMETRY)
+
+    R.SetInitialTransform(initial_transform)
     R.SetInterpolator(sitk.sitkLinear)
     
     # preform registration 

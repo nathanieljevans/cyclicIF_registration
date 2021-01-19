@@ -173,7 +173,7 @@ def round_operation(fixed, moving_df, inp, out):
     # load images
     imgs = {} 
     for i, row in moving_df.iterrows(): 
-        _im = sitk.ReadImage(inp + '/' + row.original , sitk.sitkUInt8)
+        _im = sitk.ReadImage(inp + '/' + row.original , sitk.sitkUInt16)
         _im.SetSpacing((1,1))
         imgs[row.color_channel] = _im
         next(pbar)
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     # load fixed image 
     print('loading fixed image')
     fixed_path = args.input[0] + '/' + parsed_names[lambda x: (x['round'] == 'R0') & (x['color_channel'] == 'c1')].original.item()
-    fixed = sitk.ReadImage(fixed_path, sitk.sitkUInt8)
+    fixed = sitk.ReadImage(fixed_path, sitk.sitkUInt16)
     fixed.SetSpacing((1,1))
 
     # for aesthetics 

@@ -18,7 +18,7 @@ def segment_dapi_round(img, config=None, plot=False, verbose=False):
     if verbose: print('rescaling img..')
     img = sitk.RescaleIntensity(img)
 
-    img = sitk.Cast(img, sitk.sitkUInt8)
+    img = sitk.Cast(img, sitk.sitkUInt16)
 
     # add a blur to eliminate small componentns
     # variance of ~ 1e-6 = almost no effect
@@ -197,7 +197,7 @@ def generate_core_id_map(img, stats, out, config=None, plot=True):
 
     #out = config.output_dir + '/' + config.slide_name + '/' + config.scene_name
 
-    img = sitk.Cast(sitk.RescaleIntensity(img), sitk.sitkUInt8)
+    img = sitk.Cast(sitk.RescaleIntensity(img), sitk.sitkUInt16)
     
     img_arr = sitk.GetArrayViewFromImage(img)
         

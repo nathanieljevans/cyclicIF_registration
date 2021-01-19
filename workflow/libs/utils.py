@@ -12,7 +12,7 @@ import sys
 def check_for_duplicates(df, cols): 
     return len(df[cols])-len(df[cols].drop_duplicates())
 
-def load_imgs_mt(img_paths, base_path, _type=sitk.sitkUInt8): 
+def load_imgs_mt(img_paths, base_path, _type=sitk.sitkUInt16): 
     '''
     threading to load images into memory faster 
     '''
@@ -58,7 +58,6 @@ def parse_file_name(f):
         multiscene = 'Scene' in f
         
         f2 = f.split('_')
-        
         R, protein, slide = f2[:3]
         
         date = '-'.join(f2[3:6])

@@ -65,12 +65,6 @@ def restitch_image(dat, _round, _channel, output_dir, config=None, qc=None, save
     
     # we'll use the R0 dapi core positions as the core mapping 
     c1R0_res = dat[lambda x: (x['round'] == 'R0') & (x['color_channel'] == 'c1')][['core','center_x','center_y','width', 'height']].drop_duplicates().set_index('core')
-    
-    #! DELETE THIS WHEN DONE VVV
-    #import pandas as pd
-    #pd.set_option("display.max_rows", None, "display.max_columns", None)
-    #print(c1R0_res[c1R0_res['core'] == 0].head())
-    #! DELETE THIS WHEN DONE ^^^
 
     # calculate the necessary size of the restitched image
     # TODO: this needs to be the same size as the R0 image
@@ -88,7 +82,7 @@ def restitch_image(dat, _round, _channel, output_dir, config=None, qc=None, save
     Rxc1_name = Rxc1_name[0]
     
     # create an empty image of the proper size 
-    joined_image = sitk.Image(full_size_x, full_size_y, sitk.sitkUInt8)
+    joined_image = sitk.Image(full_size_x, full_size_y, sitk.sitkUInt16)
     joined_image.SetSpacing((config.pixel_width, config.pixel_height))
     
     ###########################################################################
@@ -96,6 +90,7 @@ def restitch_image(dat, _round, _channel, output_dir, config=None, qc=None, save
     ###########################################################################
     if qc == 'auto': 
         # filter all cores with registration metrics that don't pass QC 
+        assert False, 'auto qc is deprecated'
         imDat = imDat[lambda x: \
                       (x.false_pos_err < config.FPR_threshold) & \
                       (x.false_neg_err < config.FNR_threshold) & \
@@ -119,17 +114,12 @@ def restitch_image(dat, _round, _channel, output_dir, config=None, qc=None, save
         cx = c1R0_res.loc[row.core].center_x * config.downsample_proportion * config.pixel_width
         cy = c1R0_res.loc[row.core].center_y * config.downsample_proportion * config.pixel_height
 
-        #print(cx)
-        #print(cy)
-        #print(type(cx))
-        #print(type(cy))
-
         cx = int(cx.item())
         cy = int(cy.item())
 
         # read registered core into memory (UNLESS ITS R0-then unregistered)
         # TODO: compare `restitiched` R0 against original R0 - there should be minimal changes! check for image quality loss, etc.. 
-        _im = sitk.ReadImage(row.registered_path, sitk.sitkUInt8)
+        _im = sitk.ReadImage(row.registered_path, sitk.sitkUInt16)
         _im.SetSpacing((config.pixel_width, config.pixel_height))
 
         _im.SetOrigin((cx, cy))

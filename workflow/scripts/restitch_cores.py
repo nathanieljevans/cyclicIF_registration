@@ -126,7 +126,7 @@ if __name__ == '__main__':
                 # parse the dictionary for manual qc. 
                 if type(qc_method) == type({}): 
                     if _round in qc_method.keys(): 
-                        _qc_method = qc_method[_round]
+                        _qc_method = qc_method[_round] 
                     else: 
                         _qc_method=None
                 else: 
