@@ -12,17 +12,17 @@ import numpy as np
 ####################################################################################
 
 ## path parameters -- These MUST be adjusted to your specific dataset 
-myloc=       '/mnt/e/CycIF_analysis/registration_outputs/6-Dhivya/D4'            # location of this script (WSL file structure) 
-data_dir=    '../../test_de-dusted/'#'/mnt/z/Marilyne/Axioscan/6-Dhivya/split/No_Scene/'  # location of the unregistered images 
+myloc=        os.getcwd()                                                            # location of this script (WSL file structure) 
+data_dir=    './pre-registered_imgs/' #'/mnt/z/Marilyne/Axioscan/5_Pejovic/Tiffs/Registration/'                # location of the unregistered images 
 
 # Specify the experiment here
-slide_name=  'D1'
-scene_name=  'None'                                                              # use 'None' to specify no scene name (cap sensitive)
+slide_name=  'S3'
+scene_name=  'Scene-1'                                                                  # use 'None' to specify no scene name (cap sensitive)
 
 # These paths probably don't need to be adjusted
 lib_dir=     '/mnt/c/Users/Public/cyclicIF_processing/cyclicIF_registration/workflow/libs'
 script_dir=  '/mnt/c/Users/Public/cyclicIF_processing/cyclicIF_registration/workflow/scripts'
-output_dir=   '/mnt/e/CycIF_analysis/registration_outputs/test_core_reg'
+output_dir=   './registered_imgs/'
 
 ####################################################################################
 ############################## core segmentation ###################################
@@ -36,21 +36,19 @@ downsample_proportion = 10
 # REMEMBER THIS SCALES WITH `downsample_proportion`
 # NOTE: this may need to be adjusted for different core sizes or types 
 # default ~ 2000
-min_obj_size = int( 5e4 / downsample_proportion )
+min_obj_size = int( 4e4 / downsample_proportion )
 
 # threshold value used to select core regions (after a gaussian blur) 
 # default ~ 0.75
-core_seg_quantile = 0.75
+core_seg_quantile = 0.785
 
 # padding used when selecting a core, eg selects core bounding box + 2*padding
 # default ~ 10
-padding = 25
+padding = 10
 
 # segmentation params 
 # larger values will create more blur 
-# rational range is 1e-2 to 1e-4
-# default ~ 3.5e-3
-gaussian_blur_variance = 1
+gaussian_blur_variance = 4000
 
 # core matching clustering method
 # options: 'k-means-constrained', 'dbscan' 
@@ -62,7 +60,7 @@ clustering_method = 'dbscan'
 # minimum distance between points to be considered within the same neighborhood 
 # NOTE: this is dependent on the downsample_proportion
 # default ~ 500
-eps = 0.12
+eps = 0.15
 min_samples = 2
 
 feats = ['center_x', 'center_y']
@@ -81,10 +79,13 @@ pixel_height = 0.65 # microns
 ####################################################################################
 
 num_hist_bins = 256
-learning_rate = 1
-min_step = 1e-10
+learning_rate = 1e-1   # deprecated - not used in powell optimizer
+min_step = 1e-10       # deprecated - not used in powell optimizer
 iterations = 500
-sampling_percentage = 1.0
+sampling_percentage = 1.0 # x100% 
+stepLength=1
+stepTolerance = 1e-7
+valueTolerance = 1e-7
 
 ####################################################################################
 ############################## QUALITY CONTROL #####################################

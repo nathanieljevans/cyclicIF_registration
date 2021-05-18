@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     assert fixed_name.shape[0] > 0, f'No R0 core to use as fixed image in: {args.input[0]}'
 
-    fixed = sitk.ReadImage(args.input[0] + '/' + fixed_name.path.item(), sitk.sitkUInt16)
+    fixed = utils.myload(args.input[0] + '/' + fixed_name.path.item())
     
     # remove dapi round 0 from rest of data
     parsed_names = parsed_names[lambda x: ~((x['round']=='R0') & (x.color_channel))]
@@ -45,12 +45,12 @@ if __name__ == '__main__':
 
     def _reg_(parsed_names, row, pbar): 
         '''for multithreading'''
-        moving = sitk.ReadImage(args.input[0] + '/' + row.path)
+        moving = utils.myload(args.input[0] + '/' + row.path)
         Tx = register.get_registration_transform(fixed, moving, verbose=False, config=config)
         for i, crow in parsed_names[lambda x: x['round']==row['round']].iterrows():
-            cmoving = sitk.ReadImage(args.input[0] + '/' + crow.path, sitk.sitkUInt16) 
-            reg_cmoving = register.preform_transformation(fixed, moving,Tx)
-            sitk.Cast(sitk.RescaleIntensity(reg_cmoving), sitk.sitkUInt16)
+            cmoving = utils.myload(args.input[0] + '/' + crow.path) 
+            reg_cmoving = register.preform_transformation(fixed, cmoving, Tx)
+            #sitk.Cast(sitk.RescaleIntensity(reg_cmoving), sitk.sitkUInt16)   # don't rescale unless we have to
             sitk.WriteImage(reg_cmoving, f'{args.input[0]}/registered_core={crow.core}_round={crow["round"]}_color={crow.color_channel}.tif')
         next(pbar)
 

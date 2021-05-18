@@ -22,6 +22,7 @@ def get_registration_transform(fixed, moving, config=None, verbose=True):
     
     #R.SetMetricAsMeanSquares()
     R.SetMetricAsMattesMutualInformation(numberOfHistogramBins=config.num_hist_bins)
+    #R.SetMetricAsCorrelation()
     
     #R.SetOptimizerAsConjugateGradientLineSearch(learningRate=config.learning_rate, numberOfIterations=config.iterations)
     #R.SetOptimizerAsRegularStepGradientDescent(learningRate=config.learning_rate, 
@@ -30,17 +31,19 @@ def get_registration_transform(fixed, moving, config=None, verbose=True):
     #R.SetOptimizerAsGradientDescentLineSearch(learningRate=config.learning_rate, 
     #                                           numberOfIterations=config.iterations,
     #                                           convergenceMinimumValue=1e-8)
+    
     R.SetOptimizerAsPowell(numberOfIterations=config.iterations,
                             maximumLineIterations=config.iterations,
                             stepLength=config.stepLength,
                             stepTolerance=config.stepTolerance,
                             valueTolerance=config.valueTolerance)
-    #initial_transform = sitk.TranslationTransform(fixed.GetDimension())
+    
+    initial_transform = sitk.TranslationTransform(fixed.GetDimension())
     #initial_transform = sitk.Euler2DTransform()
-    initial_transform = sitk.CenteredTransformInitializer(fixed, 
-                                                      moving, 
-                                                      sitk.Euler2DTransform(), 
-                                                      sitk.CenteredTransformInitializerFilter.GEOMETRY)
+    #initial_transform = sitk.CenteredTransformInitializer(fixed, 
+    #                                                  moving, 
+    #                                                  sitk.Euler2DTransform(), 
+    #                                                  sitk.CenteredTransformInitializerFilter.GEOMETRY)
 
     R.SetInitialTransform(initial_transform)
     R.SetInterpolator(sitk.sitkLinear)

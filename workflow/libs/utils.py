@@ -8,6 +8,19 @@ from mantichora import mantichora
 from atpbar import atpbar
 import time
 import sys
+from skimage.io import imread
+import numpy as np
+
+def myload(fname): 
+    im_arr = imread(fname, as_gray=False, plugin=None)
+    sitk_from_arr = sitk.GetImageFromArray(im_arr)
+    
+    assert sitk_from_arr.GetDimension() == 2, 'image read in with wrong number of dimensions - is the image RGB?'
+    assert sitk_from_arr.GetDepth() == 0, 'image read in with more than one channel, should be greyscale - is the image RGB?'
+    assert sitk_from_arr.GetPixelIDTypeAsString() == '16-bit unsigned integer', f'image should be `16-bit unsigned integer` but was read in as {sitk_from_arr.GetPixelIDTypeAsString()}'
+    assert np.random.choice(sitk.GetArrayFromImage(sitk_from_arr).ravel(), size=10000).max() >= 256, 'image maximum pixel intensity is less than 256 - is the image 8-bit?'
+    
+    return sitk_from_arr
 
 def check_for_duplicates(df, cols): 
     return len(df[cols])-len(df[cols].drop_duplicates())
@@ -16,9 +29,11 @@ def load_imgs_mt(img_paths, base_path, _type=sitk.sitkUInt16):
     '''
     threading to load images into memory faster 
     '''
+    assert _type == sitk.sitkUInt16, 'using alternative types are deprecated, should be sitkUint16'
+
     print('starting multithreaded image loading...')
     def load_image(path, tid, ntid):
-        im = sitk.ReadImage(path, _type)
+        im = myload(path)
         im.SetSpacing((1,1))
         print(f'finished task: {tid}/{ntid}', end='\r')
         return (path.split('/')[-1], im)

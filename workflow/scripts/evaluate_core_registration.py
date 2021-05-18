@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     # select DAPI round 0 info 
     fixed_name = parsed_names[lambda x: (x['round']=='R0') & (x.color_channel=='c1')]
-    fixed = sitk.ReadImage(args.input[0] + '/' + fixed_name.path.item())
+    fixed = utils.myload(args.input[0] + '/' + fixed_name.path.item())
     
     # remove R0 from rest of data
     parsed_names = parsed_names[lambda x: ~((x['round']=='R0') )]
@@ -37,14 +37,14 @@ if __name__ == '__main__':
     print('evaluating results of registered cores...')
     for i,row in parsed_names[lambda x: (x.color_channel=='c1') & (x.status == 'registered')].iterrows(): 
         #print('generating registration success metrics:', row['round'])
-        moving = sitk.ReadImage(args.input[0] + '/' + row.path)
+        moving = utils.myload(args.input[0] + '/' + row.path)
         df = evaluate.eval_registration(fixed, moving, row.path, plot=False)
         _res.append(df)
     
     print('evaluating results of unregistered cores...')
     for i,row in parsed_names[lambda x: (x.color_channel=='c1') & (x.status == 'unregistered')].iterrows(): 
         #print('generating registration success metrics:', row['round'])
-        moving = sitk.ReadImage(args.input[0] + '/' + row.path)
+        moving = utils.myload(args.input[0] + '/' + row.path)
         moving = sitk.Resample(moving, fixed)
         df = evaluate.eval_registration(fixed, moving, row.path, plot=False)
         _res.append(df)

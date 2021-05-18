@@ -132,7 +132,17 @@ if __name__ == '__main__':
                 else: 
                     _qc_method = qc_method
                 
-                mcore.run(qc.restitch_image, res, _round, _channel, args.output[0], config, _qc_method, True, True, pbar)
+                mcore.run(qc.restitch_image, 
+                            res, 
+                            _round, 
+                            _channel, 
+                            args.output[0], 
+                            config, 
+                            _qc_method, 
+                            True, 
+                            True, 
+                            pbar)
+                            # dat, _round, _channel, output_dir, config=None, qc=None, save=True, verbose=True, pbar=None
             
         returns = mcore.returns()
     for i in pbar: 

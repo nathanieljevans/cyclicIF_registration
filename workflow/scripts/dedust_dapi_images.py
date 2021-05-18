@@ -25,7 +25,7 @@ def dedust(info, args, pbar, config):
     '''
 
     # load image 
-    im = sitk.ReadImage(args.input[0] + '/' + info.original, sitk.sitkUInt16)
+    im = utils.myload(args.input[0] + '/' + info.original, sitk.sitkUInt16)
 
     # gaussian blur to avoid grabbing random high intesnity pixels 
     gaussian = sitk.DiscreteGaussianImageFilter()

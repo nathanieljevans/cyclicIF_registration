@@ -21,7 +21,7 @@ def plot_core_reg(core, output_dir='/home/exacloud/lustre1/NGSdev/evansna/cyclic
             status = 'registered' if r!='R0' else 'unregistered'
             img_path = core_dir + f'/{status}_core={int(core[-3:])}_round={r}_color={c}.tif'
             print(f'{name} channel --> {img_path}')
-            img = sitk.ReadImage(img_path)
+            img = utils.myload(img_path)
             _temp.append(img) 
             
         round0, round1, round2 = _temp
@@ -67,7 +67,6 @@ def restitch_image(dat, _round, _channel, output_dir, config=None, qc=None, save
     c1R0_res = dat[lambda x: (x['round'] == 'R0') & (x['color_channel'] == 'c1')][['core','center_x','center_y','width', 'height']].drop_duplicates().set_index('core')
 
     # calculate the necessary size of the restitched image
-    # TODO: this needs to be the same size as the R0 image
     temp = c1R0_res.assign(max_x=lambda x: x.center_x + x.width, max_y=lambda x: x.center_y + x.height)
     full_size_x = int(temp.max_x.max())*config.downsample_proportion  # ensures our final image is large enough to include all the cores
     full_size_y = int(temp.max_y.max())*config.downsample_proportion # 
@@ -118,8 +117,7 @@ def restitch_image(dat, _round, _channel, output_dir, config=None, qc=None, save
         cy = int(cy.item())
 
         # read registered core into memory (UNLESS ITS R0-then unregistered)
-        # TODO: compare `restitiched` R0 against original R0 - there should be minimal changes! check for image quality loss, etc.. 
-        _im = sitk.ReadImage(row.registered_path, sitk.sitkUInt16)
+        _im = utils.myload(row.registered_path)
         _im.SetSpacing((config.pixel_width, config.pixel_height))
 
         _im.SetOrigin((cx, cy))
@@ -195,9 +193,9 @@ def choose_and_viz(config):
         print('this can take a few moments...')
 
         print('loading images...')
-        im1=sitk.ReadImage(data_dir + R.value)
-        im2=sitk.ReadImage(data_dir + G.value)
-        im3=sitk.ReadImage(data_dir + B.value)
+        im1=utils.myload(data_dir + R.value)
+        im2=utils.myload(data_dir + G.value)
+        im3=utils.myload(data_dir + B.value)
         
         print('rescaling images...')
         sigm1 = sitk.Cast(sitk.RescaleIntensity(im1), sitk.sitkUInt8) # imshow clips integers to 255 

@@ -17,6 +17,10 @@ import os
 import shutil
 import argparse
 
+import sys
+sys.path.append('../libs/')
+import utils
+
 
 def parse_file_name(f): 
     '''
@@ -148,7 +152,93 @@ def transform_all_channels(fixed, channels, x, y):
 
     return imgs2
 
-def round_operation(fixed, moving_df, inp, out): 
+def sitk_registration(fixed, imgs, verbose=False): 
+    '''
+    '''
+
+    def command_iteration(method):
+        if (method.GetOptimizerIteration() == 0):
+            print("Estimated Scales: ", method.GetOptimizerScales())
+        print(f'iteration: {method.GetOptimizerIteration()} | metric={method.GetMetricValue()} | position={method.GetOptimizerPosition()}')
+    
+    num_hist_bins = 100
+    max_iterations = 25
+    sampling_percentage = 0.05 # x100% 
+    stepLength=1
+    stepTolerance = 1e-7
+    valueTolerance = 1e-7
+
+
+    moving = imgs['c1']
+
+    # perform registration 
+
+    # make sure imgs are Float32's 
+    fixed =  sitk.Cast(fixed, sitk.sitkFloat32)
+    moving = sitk.Cast(moving, sitk.sitkFloat32)
+    
+    # Normalize data - important for learning rate scaling
+    fixed = sitk.Normalize(fixed)
+    moving = sitk.Normalize(moving)
+    
+    # define registration parameters 
+    R = sitk.ImageRegistrationMethod()
+    
+    #R.SetMetricAsMeanSquares()
+    R.SetMetricAsMattesMutualInformation(numberOfHistogramBins=num_hist_bins)
+    
+    R.SetMetricSamplingStrategy(R.RANDOM)
+    R.SetMetricSamplingPercentage(sampling_percentage)
+    
+    #R.SetOptimizerAsConjugateGradientLineSearch(learningRate=config.learning_rate, numberOfIterations=config.iterations)
+    #R.SetOptimizerAsRegularStepGradientDescent(learningRate=config.learning_rate, 
+    #                                           minStep=config.min_step, 
+    #                                           numberOfIterations=config.iterations)
+    #R.SetOptimizerAsGradientDescentLineSearch(learningRate=config.learning_rate, 
+    #                                           numberOfIterations=config.iterations,
+    #                                           convergenceMinimumValue=1e-8)
+    R.SetOptimizerAsPowell(numberOfIterations=max_iterations,
+                            maximumLineIterations=max_iterations,
+                            stepLength=stepLength,
+                            stepTolerance=stepTolerance,
+                            valueTolerance=valueTolerance)
+
+    #initial_transform = sitk.TranslationTransform(fixed.GetDimension())
+    #initial_transform = sitk.Euler2DTransform()
+    initial_transform = sitk.CenteredTransformInitializer(fixed, 
+                                                      moving, 
+                                                      sitk.Euler2DTransform(), 
+                                                      sitk.CenteredTransformInitializerFilter.GEOMETRY)
+
+    R.SetInitialTransform(initial_transform)
+    R.SetInterpolator(sitk.sitkLinear)
+    
+    if verbose: R.AddCommand(sitk.sitkIterationEvent, lambda: command_iteration(R))
+    
+    # preform registration 
+    if verbose: print('training registration')
+    outTx = R.Execute(fixed, moving)
+
+    if verbose: 
+        print("-------")
+        print(outTx)
+        print("Optimizer stop condition: {0}"
+                .format(R.GetOptimizerStopConditionDescription()))
+        print(" Iteration: {0}".format(R.GetOptimizerIteration()))
+        print(" Metric value: {0}".format(R.GetMetricValue()))
+        print('-------')
+        
+    # resample images 
+    resampler = sitk.ResampleImageFilter()
+    resampler.SetReferenceImage(fixed)
+    resampler.SetInterpolator(sitk.sitkLinear)
+    resampler.SetDefaultPixelValue(0)
+    resampler.SetTransform(outTx)
+
+    return {channel:resampler.Execute(imgs[channel]) for channel in imgs}
+
+
+def round_operation(fixed, moving_df, inp, out, rescale=False): 
     '''
     perform the all necessary operations for a given round:
     0. load data
@@ -161,22 +251,31 @@ def round_operation(fixed, moving_df, inp, out):
         moving_df   sitk.Image          dataframe with select round img data (e.g., path locations) 
         inp         str                 data directory path 
         out         str                 output directory path 
+        rescale     bool                rescale 8-bit to 16bit 
 
     output
         None 
     '''
     # prepare progress bar - incrememnt with next()
     _round = moving_df['round'].unique().item()
-    pbar = iter(atpbar(range(9), name=_round))
+    pbar = iter(atpbar(range(10), name=_round))
     next(pbar)
 
     # load images
     imgs = {} 
     for i, row in moving_df.iterrows(): 
-        _im = sitk.ReadImage(inp + '/' + row.original , sitk.sitkUInt16)
+        _im = utils.myload(inp + '/' + row.original)
         _im.SetSpacing((1,1))
+        # rescale image 8-bit to 16-bit
+        # check if values are les than 256 (8bit)
+        if max(np.random.choice(sitk.GetArrayFromImage(_im).flatten(), size=100000)) < 256: 
+            print()
+            print(f'WARNING: "{row.original}" was read in as a 16-bit tiff file, but max value is less than 256. Rescaling to 16-bit.')
+            print()
+            _im = _im * ((2**16 - 1) / (2**8 - 1))
         imgs[row.color_channel] = _im
         next(pbar)
+
 
     # get transformations
     x,y = get_round_registration(fixed, imgs['c1'])
@@ -184,6 +283,10 @@ def round_operation(fixed, moving_df, inp, out):
 
     # perform transformations 
     reg_imgs = transform_all_channels(fixed, imgs, x, y)
+    next(pbar)
+
+    # perform fine + rotation transformations 
+    reg_imgs = sitk_registration(fixed, reg_imgs)
     next(pbar)
 
     # save output s
@@ -215,7 +318,8 @@ if __name__ == '__main__':
                         type=str, 
                         nargs=1,
                         help='scene name (identifier)',
-                        default=['None']) # necessary if there is no scene name provided                 
+                        default=['None']) # necessary if there is no scene name provided    
+    parser.add_argument('--rescale', action='store_true')          
     args = parser.parse_args()
 
     print('#'*100)
@@ -226,6 +330,8 @@ if __name__ == '__main__':
     print('scene name:', args.scene[0])
     print()
 
+    if args.rescale: print('WARNING: the "--rescale" flag is deprecated and no long used.')
+
     img_file_names = [x for x in os.listdir(args.input[0]) if x[-4:] == '.tif']
     parsed_names = pd.DataFrame([parse_file_name(x) for x in img_file_names])
 
@@ -235,19 +341,26 @@ if __name__ == '__main__':
     # load fixed image 
     print('loading fixed image')
     fixed_path = args.input[0] + '/' + parsed_names[lambda x: (x['round'] == 'R0') & (x['color_channel'] == 'c1')].original.item()
-    fixed = sitk.ReadImage(fixed_path, sitk.sitkUInt16)
+    fixed = utils.myload(fixed_path)
     fixed.SetSpacing((1,1))
+
+    # check if values are les than 256 (8bit)
+    if max(np.random.choice(sitk.GetArrayFromImage(fixed).flatten(), size=100000)) < 256: 
+        print()
+        print('WARNING: R0 was read in as a 16-bit tiff file, but max value is less than 256. Rescaling to 16-bit.')
+        print()
+        fixed = fixed * ((2**16 - 1) / (2**8 - 1))
 
     # for aesthetics 
     parsed_names = parsed_names.sort_values('round')
 
     # multithread registration 
     print('multithreading')
-    with mantichora(mode='threading', nworkers=16) as mcore:
+    with mantichora(mode='threading', nworkers=3) as mcore:
         for _round in parsed_names['round'].unique(): 
             if _round != 'R0':
                 moving_df = parsed_names[lambda x: (x['round'] == _round)]
-                mcore.run(round_operation, fixed, moving_df, args.input[0], args.output[0])
+                mcore.run(round_operation, fixed, moving_df, args.input[0], args.output[0], args.rescale)
         returns = mcore.returns()
 
     # move R0 images over to output dire

@@ -182,13 +182,14 @@ def perform_otsu_threshold(img):
 
     return seg
 
-def generate_core_id_map(img, stats, out, config=None, plot=True): 
+def generate_core_id_map(img, stats, out, config=None, plot=True, extra_txt=None): 
     '''
     Generate a downsampled image of R0-C1 (dapi) image where each core bounding box is labeled with it's corresponding identifier. 
     
     inputs: 
     img            <sitk.image>       should be the downsampled image of R0-C1 (dapi) from which shape statistics were calculated. 
     stats          <pd.dataframe>     shape statistics calculated during image segmentation
+    extra_txt       dict              core_id:extra_text         
     
     outputs: 
     shape statistic results [, downsampled R0-c1 (dapi) image] 
@@ -212,6 +213,9 @@ def generate_core_id_map(img, stats, out, config=None, plot=True):
         rect = patches.Rectangle((row.center_x, row.center_y), row.width, row.height, linewidth=2, edgecolor='r', facecolor='none')
         ax.add_patch(rect)
         plt.text(row.center_x, row.center_y - 10, f'core-{int(row.component)}', c='w')
+        if extra_txt is not None: 
+            if int(row.component) in extra_txt:
+                plt.text(row.center_x, row.center_y + 20, extra_txt[int(row.component)], c='y')
 
     plt.axis('off')
     
