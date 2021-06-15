@@ -37,7 +37,7 @@ def get_registration_transform(fixed, moving, config=None, verbose=True):
                             stepLength=config.stepLength,
                             stepTolerance=config.stepTolerance,
                             valueTolerance=config.valueTolerance)
-    
+                                                      
     initial_transform = sitk.TranslationTransform(fixed.GetDimension())
     #initial_transform = sitk.Euler2DTransform()
     #initial_transform = sitk.CenteredTransformInitializer(fixed, 
@@ -47,6 +47,9 @@ def get_registration_transform(fixed, moving, config=None, verbose=True):
 
     R.SetInitialTransform(initial_transform)
     R.SetInterpolator(sitk.sitkLinear)
+
+    #registration_method.SetMovingInitialTransform(initial_transform)
+    #registration_method.SetInitialTransform(optimized_transform, inPlace=False)
     
     # preform registration 
     outTx = R.Execute(fixed, moving)

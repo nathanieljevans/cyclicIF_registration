@@ -3,7 +3,7 @@ This script performs a full slide registration. To do this effectively, we follo
 
 1. general x-axis slide alighnment 
 2. general y-axis slide alignment 
-3. registration using mutual information and gradient descent
+3. translation + rotation registration using mutual information and gradient descent
 
 This attempts to ensure that the global alignment of cores is accurate. 
 '''

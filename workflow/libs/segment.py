@@ -35,8 +35,9 @@ def segment_dapi_round(img, config=None, plot=False, verbose=False):
     #otsu_filter = sitk.OtsuThresholdImageFilter()
     #otsu_filter.SetInsideValue(0)
     #otsu_filter.SetOutsideValue(1)
+    #otsu_filter.SetNumberOfHistogramBins(100)
     #seg = otsu_filter.Execute(img_blur)
-    
+    #seg_thresh=0
     seg_thresh = np.quantile(sitk.GetArrayViewFromImage(img_blur).ravel(), config.core_seg_quantile)
     seg = img_blur > seg_thresh
     

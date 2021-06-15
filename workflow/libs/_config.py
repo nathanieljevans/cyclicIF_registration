@@ -12,17 +12,18 @@ import numpy as np
 ####################################################################################
 
 ## path parameters -- These MUST be adjusted to your specific dataset 
-myloc=        os.getcwd()                                                            # location of this script (WSL file structure) 
-data_dir=    './pre-registered_imgs/' #'/mnt/z/Marilyne/Axioscan/5_Pejovic/Tiffs/Registration/'                # location of the unregistered images 
+myloc=        os.getcwd()   # location of this script (WSL file structure) 
+data_dir= './pre-registered_imgs/' #'/mnt/z/Marilyne/Axioscan/6-Dhivya/New_folder/Test_D1/'
+#data_dir=    './pre-registered_imgs/' #'/mnt/z/Marilyne/Axioscan/6-Dhivya/split/D1/wo_dust' #/mnt/z/Marilyne/Axioscan/6-Dhivya/split/No_Scene/' # #'/mnt/z/Marilyne/Axioscan/6-Dhivya/split/No_Scene/'         # location of the unregistered images 
 
 # Specify the experiment here
-slide_name=  'S3'
-scene_name=  'Scene-1'                                                                  # use 'None' to specify no scene name (cap sensitive)
+slide_name=  'D1'
+scene_name=  'None'                                                                  # use 'None' to specify no scene name (cap sensitive)
 
 # These paths probably don't need to be adjusted
 lib_dir=     '/mnt/c/Users/Public/cyclicIF_processing/cyclicIF_registration/workflow/libs'
 script_dir=  '/mnt/c/Users/Public/cyclicIF_processing/cyclicIF_registration/workflow/scripts'
-output_dir=   './registered_imgs/'
+output_dir=   '/mnt/d/cyclicIF_outputs/6_Dhivya/D1/registered_imgs/'
 
 ####################################################################################
 ############################## core segmentation ###################################
@@ -40,11 +41,11 @@ min_obj_size = int( 4e4 / downsample_proportion )
 
 # threshold value used to select core regions (after a gaussian blur) 
 # default ~ 0.75
-core_seg_quantile = 0.785
+core_seg_quantile = 0.74 # (Dhiva D1) #0.785 (Pejovic)
 
 # padding used when selecting a core, eg selects core bounding box + 2*padding
 # default ~ 10
-padding = 10
+padding = 20
 
 # segmentation params 
 # larger values will create more blur 
@@ -58,9 +59,7 @@ clustering_method = 'dbscan'
 
 # IF DBSCAN
 # minimum distance between points to be considered within the same neighborhood 
-# NOTE: this is dependent on the downsample_proportion
-# default ~ 500
-eps = 0.15
+eps = 0.12   # (pejovic~0.15)
 min_samples = 2
 
 feats = ['center_x', 'center_y']
