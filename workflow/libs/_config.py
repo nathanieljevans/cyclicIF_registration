@@ -13,8 +13,8 @@ import numpy as np
 
 ## path parameters -- These MUST be adjusted to your specific dataset 
 myloc=        os.getcwd()   # location of this script (WSL file structure) 
-data_dir= './pre-registered_imgs/' #'/mnt/z/Marilyne/Axioscan/6-Dhivya/New_folder/Test_D1/'
-#data_dir=    './pre-registered_imgs/' #'/mnt/z/Marilyne/Axioscan/6-Dhivya/split/D1/wo_dust' #/mnt/z/Marilyne/Axioscan/6-Dhivya/split/No_Scene/' # #'/mnt/z/Marilyne/Axioscan/6-Dhivya/split/No_Scene/'         # location of the unregistered images 
+data_dir=   './pre-registered_imgs/' # otherwise use this 
+# data_dir =  '/mnt/z/Marilyne/Axioscan/6-Dhivya/New_folder/Test_D1/' # use this if examining images before pre-registration via tutorial.ipynb
 
 # Specify the experiment here
 slide_name=  'D1'
@@ -23,7 +23,7 @@ scene_name=  'None'                                                             
 # These paths probably don't need to be adjusted
 lib_dir=     '/mnt/c/Users/Public/cyclicIF_processing/cyclicIF_registration/workflow/libs'
 script_dir=  '/mnt/c/Users/Public/cyclicIF_processing/cyclicIF_registration/workflow/scripts'
-output_dir=   '/mnt/d/cyclicIF_outputs/6_Dhivya/D1/registered_imgs/'
+output_dir=  '/mnt/d/cyclicIF_outputs/6_Dhivya/D1/registered_imgs/'    # this is path to registered cores
 
 ####################################################################################
 ############################## core segmentation ###################################
