@@ -47,7 +47,7 @@ python slide_registration.py --input $data_dir --output $prereg_out --slide $sli
 
 echo 'segmenting and matching cores'
 date
-python segment_and_match_cores.py --input $data_dir --output $output_dir --slide $slide_name --scene $scene_name --config $myloc
+python segment_and_match_cores.py --input $prereg_out --output $output_dir --slide $slide_name --scene $scene_name --config $myloc
 
 echo 'registering and evaluating cores'
 date
@@ -69,7 +69,7 @@ python generate_QC_file.py --results $output_dir/aggregated_results.csv --output
 
 echo 'restitiching cores'
 date
-python restitch_cores.py --results_path $output_dir/aggregated_results.csv --slide $slide_name --scene $scene_name --qc $qc_path --config $myloc --output $restitched_out
+python restitch_cores.py --results_path $output_dir/aggregated_results.csv --slide $slide_name --scene $scene_name --qc None --config $myloc --output $restitched_out
 
 echo 'registration pipeline complete'
 date
