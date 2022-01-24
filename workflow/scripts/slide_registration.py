@@ -268,11 +268,15 @@ def round_operation(fixed, moving_df, inp, out, rescale=False):
         _im.SetSpacing((1,1))
         # rescale image 8-bit to 16-bit
         # check if values are les than 256 (8bit)
-        if max(np.random.choice(sitk.GetArrayFromImage(_im).flatten(), size=100000)) < 256: 
+        if sitk.GetArrayFromImage(_im).max() < 256: 
             print()
-            print(f'WARNING: "{row.original}" was read in as a 16-bit tiff file, but max value is less than 256. Rescaling to 16-bit.')
+            print(f'WARNING: "{row.original}" was read in as a 16-bit tiff file, but max value is less than 256.')
             print()
-            _im = _im * ((2**16 - 1) / (2**8 - 1))
+            if rescale: 
+                raise DeprecationWarning('This feature is deprecated - and should not be used.')
+                print('WARNING! Rescaling to 16-bit.')
+                _im = _im * ((2**16 - 1) / (2**8 - 1))
+                
         imgs[row.color_channel] = _im
         next(pbar)
 
