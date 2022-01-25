@@ -18,7 +18,7 @@ def myload(fname):
     assert sitk_from_arr.GetDimension() == 2, 'image read in with wrong number of dimensions - is the image RGB?'
     assert sitk_from_arr.GetDepth() == 0, 'image read in with more than one channel, should be greyscale - is the image RGB?'
     assert sitk_from_arr.GetPixelIDTypeAsString() == '16-bit unsigned integer', f'image should be `16-bit unsigned integer` but was read in as {sitk_from_arr.GetPixelIDTypeAsString()}'
-    assert sitk.GetArrayFromImage(sitk_from_arr).max() >= 256, 'image maximum pixel intensity is less than 256 - is the image 8-bit?'
+    #assert sitk.GetArrayFromImage(sitk_from_arr).max() >= 256, 'image maximum pixel intensity is less than 256 - is the image 8-bit?'
     
     return sitk_from_arr
 
